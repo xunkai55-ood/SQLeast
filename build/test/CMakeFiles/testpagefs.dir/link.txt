@@ -1,0 +1,1 @@
+/usr/bin/c++    -std=c++11 -g -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/testpagefs.dir/testpagefs.cpp.o  -o ../../bin/testpagefs  ../../lib/libpagefs.a 

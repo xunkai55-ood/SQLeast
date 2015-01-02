@@ -1,0 +1,2 @@
+/Users/badpoet/Thursday/3a/DB/projects/SQLeast/build/src/pagefs/CMakeFiles/pagefs.dir
+/Users/badpoet/Thursday/3a/DB/projects/SQLeast/build/test/CMakeFiles/testpagefs.dir

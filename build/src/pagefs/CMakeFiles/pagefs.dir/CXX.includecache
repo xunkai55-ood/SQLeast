@@ -1,0 +1,32 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../src/pagefs/../../include/debug.h
+iostream
+-
+
+../src/pagefs/../../include/pagefs/exception.h
+
+../src/pagefs/../../include/pagefs/pagefs.h
+cstdlib
+-
+cstdio
+-
+exception.h
+../src/pagefs/../../include/pagefs/exception.h
+../debug.h
+../src/pagefs/../../include/debug.h
+
+/Users/badpoet/Thursday/3a/DB/projects/SQLeast/src/pagefs/pagefs.cpp
+pagefs/pagefs.h
+/Users/badpoet/Thursday/3a/DB/projects/SQLeast/src/pagefs/pagefs/pagefs.h
+cstring
+-
+cstdio
+-
+
