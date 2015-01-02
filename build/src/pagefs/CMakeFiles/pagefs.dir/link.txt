@@ -1,2 +1,0 @@
-/usr/bin/ar cr ../../../lib/libpagefs.a  CMakeFiles/pagefs.dir/pagefs.cpp.o
-/usr/bin/ranlib ../../../lib/libpagefs.a

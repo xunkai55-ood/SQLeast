@@ -1,5 +1,9 @@
+bin
+lib
+build
+
 # Created by .ignore support plugin (hsz.mobi)
-### C++ template
+# C++ template
 # Compiled Object files
 *.slo
 *.lo
