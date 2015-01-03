@@ -6,6 +6,8 @@ namespace pagefs {
 
     /* pagefs */
 
+    PageFS *PageFS::instance_ = nullptr;
+
     PageFS::PageFS(): entryCnt_(0) {
         lruList_ = LRUList();
         lruTable_ = LRUHash();
@@ -114,8 +116,11 @@ namespace pagefs {
     }
 
     void PageFS::forcePage(int fileId, int pageNum) {
-        BufferPage p = lruTable_.pop(fileId, pageNum).data;
-        commitPage(p);
+        LRUHashItem *t = lruTable_.get(fileId, pageNum);
+        writeBack(t->data);
+        t->data.dirty = 0;
+        lruList_.remove(t->node);
+        t->node = lruList_.push_back(t);
     }
 
     void PageFS::pinPage(int fileId, int pageNum) {
@@ -140,11 +145,11 @@ namespace pagefs {
         if (p == nullptr)
             return false;
         LRUHashItem *t = lruList_.remove(p);
-        int key = (t - lruTable_.table) / sizeof(LRUHashItem);
-        return commitPage(lruTable_.popByKey(key).data);
+        int key = (int)((t - lruTable_.table) / sizeof(LRUHashItem));
+        return writeBack(lruTable_.popByKey(key).data);
     }
 
-    bool PageFS::commitPage(BufferPage p) {
+    bool PageFS::writeBack(BufferPage p) {
         if (p.dirty) {
             FILE *f = filePtr_[p.fileId];
             fseek(f, p.pageNum * PAGE_SIZE, 0);
@@ -233,6 +238,7 @@ namespace pagefs {
         n->prev = nullptr;
         n->next = head;
         head = n;
+        if (tail == nullptr) tail = head;
         return head;
     }
 
@@ -242,29 +248,14 @@ namespace pagefs {
         n->prev = tail;
         n->next = nullptr;
         tail = n;
+        if (head == nullptr) head = tail;
         return tail;
-    }
-
-    LRUHashItem *LRUList::pop_head() {
-        if (head == nullptr) return nullptr;
-        LRUHashItem *res = head->item;
-        head = head->next;
-        delete head->prev;
-        head->prev = nullptr;
-        return res;
-    }
-
-    LRUHashItem *LRUList::pop_back() {
-        if (tail == nullptr) return nullptr;
-        LRUHashItem *res = tail->item;
-        tail = tail->prev;
-        delete tail->next;
-        tail->next = nullptr;
-        return res;
     }
 
     LRUHashItem *LRUList::remove(LRUListNode *p) {
         if (p == nullptr) return nullptr;
+        if (p == head) head = p->next;
+        if (p == tail) tail = p->prev;
         LRUHashItem *res = p->item;
         LRUListNode *q = p->prev, *r = p->next;
         if (q != nullptr) q->next = r;

@@ -13,7 +13,7 @@ namespace pagefs {
     // pagefs
     const int MAX_FILE_NUM(32767);
     const int PAGE_SIZE(8192);
-    const int MAX_BUFFER_SIZE(1024); // has to be 2^n for the performance concern
+    const int MAX_BUFFER_SIZE(3); // has to be 2^n - 1 for the performance concern
 
     // file system
     const int FILE_NAME_MAX_LEN(40);
@@ -72,8 +72,8 @@ namespace pagefs {
 
         LRUListNode *push_head(LRUHashItem *p);
         LRUListNode *push_back(LRUHashItem *p);
-        LRUHashItem *pop_head();
-        LRUHashItem *pop_back();
+        inline LRUHashItem *pop_head() { return remove(head); }
+        inline LRUHashItem *pop_back() { return remove(tail); }
         LRUHashItem *remove(LRUListNode *p);
 
         LRUListNode *head, *tail;
@@ -82,10 +82,14 @@ namespace pagefs {
     class PageFS {
 
     public:
-        friend class FileHandle;
-        friend class PageHandle;
 
-        PageFS();
+        static PageFS *getInstance() {
+            if (instance_ == nullptr) {
+                instance_ = new PageFS();
+            }
+            return instance_;
+        }
+
         ~PageFS();
 
         void createFile(const char *fileName, bool override = false);
@@ -100,6 +104,10 @@ namespace pagefs {
 
 
     private:
+        static PageFS *instance_;
+
+        PageFS();
+
         FileEntry entries_[MAX_FILE_NUM];
         int entryCnt_;
         FILE* filePtr_[MAX_FILE_NUM];
@@ -109,7 +117,7 @@ namespace pagefs {
         /* buffer */
 
         bool commitOnePage();
-        bool commitPage(BufferPage p);
+        bool writeBack(BufferPage p);
 
     };
 
