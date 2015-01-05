@@ -6,9 +6,8 @@ namespace sqleast {
 
         using namespace pagefs;
 
-        FileHandle::FileHandle(FileId fid) : fid_(fid) {
-            fs_ = PageFS::getInstance();
-            FileInfo *infoPtr = (FileInfo*)fs_->loadPage(fid, 0);
+        FileHandle::FileHandle(FileId fid) : fid_(fid), fs_(PageFS::getInstance()) {
+            FileInfo *infoPtr = (FileInfo*)fs_.loadPage(fid, 0);
             info_ = *(infoPtr);
         }
 
@@ -17,14 +16,14 @@ namespace sqleast {
         }
 
         Record FileHandle::getRec(const RID rid) {
-            char *pData = fs_->loadPage(fid_, rid.pageNum);
+            char *pData = fs_.loadPage(fid_, rid.pageNum);
             pData = moveToRec(pData);
             pData += rid.slotNum * info_.recordSize;
             return Record(rid, pData);
         }
 
         RID FileHandle::updateRec(const RID rid, char *const rData) {
-            char *pData = fs_->loadPage(fid_, rid.pageNum);
+            char *pData = fs_.loadPage(fid_, rid.pageNum);
             pData = moveToRec(pData);
             pData += rid.slotNum * info_.recordSize;
             memcpy(rData, pData, (size_t)info_.recordSize);
@@ -36,7 +35,7 @@ namespace sqleast {
             int pageNum = info_.firstEmptyPage;
             int slotNum = 0;
             while (pageNum != 0) {
-                char *pData = fs_->loadPage(fid_, pageNum);
+                char *pData = fs_.loadPage(fid_, pageNum);
                 PageHeader pHeader = getPageHeader(pData);
                 char *bitmap = pHeader.slotBitmap;
                 char *records = pHeader.slotBitmap + info_.slotBitmapSize;
@@ -49,7 +48,7 @@ namespace sqleast {
                         pHeader.emptySlot -= 1;
                         if (pHeader.emptySlot == 0) { // remove the page from empty array
                             if (pHeader.nextPage != 0) {
-                                char *next = fs_->loadPage(fid_, pHeader.nextPage);
+                                char *next = fs_.loadPage(fid_, pHeader.nextPage);
                                 PageHeader nextPH = getPageHeader(next);
                                 writePageHeader(next, nextPH);
                             }
@@ -76,7 +75,7 @@ namespace sqleast {
         }
 
         void FileHandle::deleteRec(const RID rid) {
-            char *pData = fs_->loadPage(fid_, rid.pageNum);
+            char *pData = fs_.loadPage(fid_, rid.pageNum);
             PageHeader pHeader = getPageHeader(pData);
             if (pHeader.emptySlot == 0) {
                 pHeader.nextPage = info_.firstEmptyPage;
@@ -91,7 +90,7 @@ namespace sqleast {
 
         int FileHandle::newPage() {
             info_.totalPageNum += 1;
-            char *pData = fs_->loadPage(fid_, info_.totalPageNum);
+            char *pData = fs_.loadPage(fid_, info_.totalPageNum);
 
             PageHeader pHeader = getPageHeader(pData);
             pHeader.emptySlot = info_.slotPerPage;

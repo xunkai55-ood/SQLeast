@@ -86,10 +86,8 @@ namespace pagefs {
 
     public:
 
-        static PageFS *getInstance() {
-            if (instance_ == nullptr) {
-                instance_ = new PageFS();
-            }
+        static PageFS &getInstance() {
+            static PageFS instance_;
             return instance_;
         }
 
@@ -109,7 +107,6 @@ namespace pagefs {
 
 
     private:
-        static PageFS *instance_;
 
         PageFS();
 

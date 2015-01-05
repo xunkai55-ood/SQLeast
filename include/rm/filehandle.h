@@ -25,15 +25,15 @@ namespace sqleast {
         private:
             FileId fid_;
             FileInfo info_;
-            pagefs::PageFS *fs_;
+            pagefs::PageFS &fs_;
 
             inline void commitInfo() {
-                char *pData = fs_->loadPage(fid_, 0);
+                char *pData = fs_.loadPage(fid_, 0);
                 memcpy(pData, &info_, sizeof(info_));
-                fs_->markDirty(fid_, 0);
+                fs_.markDirty(fid_, 0);
             }
             inline void commitPage(int pageNum) {
-                fs_->markDirty(fid_, pageNum);
+                fs_.markDirty(fid_, pageNum);
             }
 
             inline PageHeader getPageHeader(char *pData) {

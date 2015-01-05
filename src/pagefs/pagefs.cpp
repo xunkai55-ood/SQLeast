@@ -7,8 +7,6 @@ namespace pagefs {
 
     /* pagefs */
 
-    PageFS *PageFS::instance_ = nullptr;
-
     PageFS::PageFS(): entryCnt_(0) {
         lruList_ = LRUList();
         lruTable_ = LRUHash();
@@ -19,7 +17,7 @@ namespace pagefs {
 
     PageFS::~PageFS() {
         std::cout << "destructing pagefs" << std::endl;
-        while (commitOnePage()) std::cout << "yes" << std::endl; // commit all
+        while (commitOnePage());
     }
 
     void PageFS::printState(std::ostream &os) {
