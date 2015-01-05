@@ -5,8 +5,8 @@
 
 using namespace std;
 
-void testSingleIO() {
-    cout << "single io test begin!" << endl;
+void testSingleIO1() {
+    cout << "single io 1 test begin!" << endl;
     pagefs::PageFS *fs = pagefs::PageFS::getInstance();
     fs->createFile("test.db", true);
     cout << "created!" << endl;
@@ -15,7 +15,7 @@ void testSingleIO() {
     char *c = fs->loadPage(f, 0);
     cout << "loaded!" << endl;
     assert(c != nullptr);
-    strcat(c, "hello world how are you");
+    strcat(c, "Hello world, how are you?");
     cout << "written!" << endl;
     fs->markDirty(f, 0);
     fs->forcePage(f, 0);
@@ -27,13 +27,13 @@ void testSingleIO2() {
     pagefs::PageFS *fs = pagefs::PageFS::getInstance();
     pagefs::FileId f = fs->openFile("test.db");
     cout << "opened!" << endl;
-    char *c = fs->loadPage(f, 3);
+    char *c = fs->loadPage(f, 0);
     cout << "loaded!" << endl;
     assert(c != nullptr);
-    strcat(c, "Ha ha ha");
+    strcat(c, "This is a test.");
     cout << "written!" << endl;
-    fs->markDirty(f, 3);
-    fs->forcePage(f, 3);
+    fs->markDirty(f, 0);
+    fs->forcePage(f, 0);
     cout << "forced!" << endl;
 }
 
