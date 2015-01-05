@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <cstdio>
+#include <iostream>
 
 #include "exception.h"
 
@@ -103,6 +104,8 @@ namespace pagefs {
         void pinPage(int fileId, int pageNum);
         void unpinPage(int fileId, int pageNum);
         void markDirty(int fileId, int pageNum);
+
+        void printState(std::ostream &os);
 
 
     private:

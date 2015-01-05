@@ -74,9 +74,46 @@ void testBuffer() {
     char *a4 = fs->loadPage(f, 3);
 }
 
+void interactiveTest() {
+    using namespace pagefs;
+    PageFS *fs = PageFS::getInstance();
+    char op;
+    char *c;
+    int page, flag = 0;
+    FileId f = fs->openFile("test3.db");
+    string s;
+    while (true) {
+        cin >> op >> page;
+        cout << "[CMD]$ ";
+        switch (op) {
+            case 'P':
+                c = fs->loadPage(f, page);
+                cout << "[P]" << c << endl;
+                fs->unpinPage(f, page);
+                break;
+            case 'W':
+                c = fs->loadPage(f, page);
+                strcpy(c, "hahaha");
+                fs->markDirty(f, page);
+                fs->unpinPage(f, page);
+                break;
+            case 'S':
+                fs->printState(cout);
+                break;
+            case 'Q':
+                flag = 1;
+                break;
+            default:
+                break;
+        }
+        if (flag) break;
+    }
+}
+
 int main() {
 //    testBuffer();
 //    testSingleIO2();
-    testSingleIO3();
+//    testSingleIO3();
+    interactiveTest();
     return 0;
 }

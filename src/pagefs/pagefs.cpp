@@ -1,4 +1,5 @@
 #include "pagefs/pagefs.h"
+#include <iostream>
 #include <cstring>
 #include <cstdio>
 
@@ -17,9 +18,14 @@ namespace pagefs {
     }
 
     PageFS::~PageFS() {
-        while (commitOnePage()); // commit all
+        std::cout << "destructing pagefs" << std::endl;
+        while (commitOnePage()) std::cout << "yes" << std::endl; // commit all
     }
 
+    void PageFS::printState(std::ostream &os) {
+        os << "[PageFS state]" << std::endl;
+        os << "[buffer] " << lruTable_.total << " / " << MAX_BUFFER_SIZE << std::endl;
+    }
     // TODO check file names
 
     void PageFS::createFile(const char *fileName, bool override) {
@@ -84,12 +90,17 @@ namespace pagefs {
     }
 
     char *PageFS::loadPage(int fileId, int pageNum) {
-        if (lruTable_.total == MAX_BUFFER_SIZE) {
-            if (!commitOnePage())
-                throw NoBufError();
+        LRUHashItem *t;
+        try {
+            t = lruTable_.get(fileId, pageNum);
+        } catch (const ItemNotFound &e) {
+            t = nullptr;
         }
-        LRUHashItem *t = lruTable_.get(fileId, pageNum);
         if (t == nullptr) {
+            if (lruTable_.total == MAX_BUFFER_SIZE) {
+                if (!commitOnePage())
+                    throw NoBufError();
+            }
             Debug::info("not found item");
             BufferPage p;
             p.data = new char[PAGE_SIZE];
@@ -97,11 +108,15 @@ namespace pagefs {
             p.fileId = fileId;
             p.pageNum = pageNum;
             p.dirty = 0;
-            p.pinned = 0;
+            p.pinned = 1;  // automatically pinned
 
             FILE *f = filePtr_[fileId];
-            fseek(f, pageNum * PAGE_SIZE, 0);
-            fread(p.data, 1, PAGE_SIZE, f);
+            fseek(f, 0, SEEK_END);
+            off_t offset = PAGE_SIZE * pageNum;
+            if (offset <= ftell(f)) {
+                fseek(f, pageNum * PAGE_SIZE, 0);
+                fread(p.data, 1, PAGE_SIZE, f);
+            }
 
             t = lruTable_.add(p, nullptr);
             t->node = lruList_.push_back(t);
@@ -142,6 +157,7 @@ namespace pagefs {
         LRUListNode *p = lruList_.head;
         while (p != nullptr && p->item->data.pinned)
             p = p->next;
+        Debug::info("found unpined");
         if (p == nullptr)
             return false;
         LRUHashItem *t = lruList_.remove(p);
@@ -192,7 +208,7 @@ namespace pagefs {
         int hashValue = key;
         if (table[key].node == nullptr)
             return nullptr;
-        while (table[key].hashValue != hashValue) {
+        while (table[key].data.fileId != fileId || table[key].data.pageNum != pageNum) {
             key = (key + 1) & MAX_BUFFER_SIZE_M1;
             if (table[key].node == nullptr)
                 return nullptr;
@@ -222,6 +238,8 @@ namespace pagefs {
         int i = j, k;
         total -= 1;
         LRUHashItem res = table[i];
+        Debug::info("start popping");
+        std::cout << i << std::endl;
         table[i].node = nullptr;
         do {
             j = (j + 1) & MAX_BUFFER_SIZE_M1;
@@ -231,8 +249,10 @@ namespace pagefs {
             if ((i <= j) ? ((i < k) && (k <= j)) : (i < k) || (k <= j))
                 continue;
             table[i] = table[j];
+            table[j].node = nullptr;
             i = j;
         } while (true);
+        Debug::info("popped");
         return res;
     }
 
