@@ -9,3 +9,5 @@ namespace sqleast {
         class RecordTooLargeException : public RMException {};
     }
 }
+
+#endif

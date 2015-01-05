@@ -1,5 +1,5 @@
+#include "rm/bitmaputil.h"
 #include "rm/filehandle.h"
-#include "rm/bitmap.h"
 
 namespace sqleast {
     namespace rm {
@@ -43,8 +43,8 @@ namespace sqleast {
                 bool found = false;
 
                 while (bitmap < records) {
-                    if ((*bitmap) != 255) { // find avaliable slot
-                        slotNum = bitmap8::lowest0[*bitmap];
+                    if ((unsigned char)(*bitmap) != 255) { // find avaliable slot
+                        slotNum = Bitmap8Util::lowest0((unsigned char)*bitmap);
                         *bitmap |= 1 << slotNum;
                         pHeader.emptySlot -= 1;
                         if (pHeader.emptySlot == 0) { // remove the page from empty array

@@ -2,7 +2,6 @@
 #define RM_CORE_H
 
 #include "pagefs/pagefs.h"
-#include "filehandle.h"
 
 namespace sqleast {
     namespace rm {
@@ -23,6 +22,8 @@ namespace sqleast {
             PageHeader (int _nextPage, int _emptySlot, char *_slotBitmap):
                     nextPage(_nextPage), emptySlot(_emptySlot), slotBitmap(_slotBitmap) {}
         }; // should be created and released by core, cuz slotBitmap is variable-length
+
+        class FileHandle;
 
         class RecordManager {
 

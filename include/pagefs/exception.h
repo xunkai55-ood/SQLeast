@@ -46,6 +46,8 @@ namespace pagefs {
     // exception when removing a file
     class FileRemoveException : public PageFSException {};
 
+    class ItemNotFound : public PageFSException {};
+
     /* unexpected exceptions
      *
      * These exceptions are not expected to occur in runtime.

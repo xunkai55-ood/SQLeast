@@ -1,8 +1,12 @@
 #include "rm/core.h"
+#include "rm/filehandle.h"
 #include "rm/exception.h"
+#include "rm/bitmaputil.h"
 
 namespace sqleast {
     namespace rm {
+
+        bool Bitmap8Util::inited = false;
 
         using namespace pagefs;
 
@@ -32,8 +36,7 @@ namespace sqleast {
         FileHandle RecordManager::openFile(const char *fileName) {
             PageFS *fs = PageFS::getInstance();
             int fid = fs->openFile(fileName);
-            rm::FileHandle handle(fid);
-            return handle;
+            return rm::FileHandle(fid);
         }
 
         void RecordManager::destroyFile(const char *fileName) {

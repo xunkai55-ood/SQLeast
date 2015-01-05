@@ -177,25 +177,27 @@ namespace pagefs {
         }
         total += 1;
         int key = hash(p.fileId, p.pageNum);
+        int hashValue = key;
         while (table[key].node != nullptr) {
             key = (key + 1) & MAX_BUFFER_SIZE;
         }
         table[key].data = p;
+        table[key].hashValue = hashValue;
         table[key].node = node;
         return &(table[key]);
     }
 
     LRUHashItem *LRUHash::get(int fileId, int pageNum) {
         int key = hash(fileId, pageNum);
-        int origin = key;
+        int hashValue = key;
         if (table[key].node == nullptr)
             return nullptr;
-        while (table[key].data.fileId != fileId || table[key].data.pageNum != pageNum) {
+        while (table[key].hashValue != hashValue) {
             key = (key + 1) & MAX_BUFFER_SIZE;
             if (table[key].node == nullptr)
                 return nullptr;
             if (key == origin) {
-                throw HashTableError();
+                throw ItemNotFound();
             }
         }
         return &(table[key]);
@@ -203,22 +205,34 @@ namespace pagefs {
 
     LRUHashItem LRUHash::pop(int fileId, int pageNum) {
         int key = hash(fileId, pageNum);
-        int origin = key;
+        int hashValue = key;
         if (table[key].node == nullptr)
-            throw HashTableError();
+            throw ItemNotFound();
         while (table[key].data.fileId != fileId || table[key].data.pageNum != pageNum) {
             key = (key + 1) & MAX_BUFFER_SIZE;
-            if (table[key].node == nullptr || key == origin) {
-                throw HashTableError();
+            if (table[key].node == nullptr || key == hashValue) {
+                throw ItemNotFound();
             }
         }
         return popByKey(key);
     }
 
-    LRUHashItem LRUHash::popByKey(int key) {
+    LRUHashItem LRUHash::popByKey(int j) {
+        /* see http://en.wikipedia.org/wiki/Open_addressing */
+        int i = j, k;
         total -= 1;
-        LRUHashItem res = table[key];
-        table[key].node = nullptr;
+        LRUHashItem res = table[i];
+        table[i].node = nullptr;
+        do {
+            j = (j + 1) & MAX_BUFFER_SIZE;
+            if (table[j].node == nullptr)
+                break;
+            k = table[j].hashValue;
+            if ((i <= j) ? ((i < k) && (k <= j)) : (i < k) || (k <= j))
+                continue;
+            table[i] = table[j];
+            i = j;
+        } while (true);
         return res;
     }
 

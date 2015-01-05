@@ -45,6 +45,7 @@ namespace pagefs {
     struct LRUHashItem {
         BufferPage data;
         LRUListNode *node;  // nullptr means unused
+        int hashValue;
     };
 
     struct LRUHash {
