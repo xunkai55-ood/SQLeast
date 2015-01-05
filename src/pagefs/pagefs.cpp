@@ -196,7 +196,7 @@ namespace pagefs {
             key = (key + 1) & MAX_BUFFER_SIZE;
             if (table[key].node == nullptr)
                 return nullptr;
-            if (key == origin) {
+            if (key == hashValue) {
                 throw ItemNotFound();
             }
         }
