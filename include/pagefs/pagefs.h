@@ -12,8 +12,9 @@ namespace pagefs {
 
     // pagefs
     const int MAX_FILE_NUM(32767);
-    const int PAGE_SIZE(8192);
-    const int MAX_BUFFER_SIZE(3); // has to be 2^n - 1 for the performance concern
+    const int PAGE_SIZE(256);
+    const int MAX_BUFFER_SIZE(4); // has to be 2^n for the performance concern
+    const int MAX_BUFFER_SIZE_M1 = MAX_BUFFER_SIZE - 1;
 
     // file system
     const int FILE_NAME_MAX_LEN(40);
@@ -56,7 +57,7 @@ namespace pagefs {
         int total;
 
         inline int hash(int fileId, int pageNum) {
-            return ((fileId << 5) + pageNum) & MAX_BUFFER_SIZE;
+            return ((fileId << 5) + pageNum) & MAX_BUFFER_SIZE_M1;
         }
 
         LRUHashItem *get(int fileId, int pageNum);

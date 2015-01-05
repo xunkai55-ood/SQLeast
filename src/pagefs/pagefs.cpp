@@ -17,7 +17,7 @@ namespace pagefs {
     }
 
     PageFS::~PageFS() {
-
+        while (commitOnePage()); // commit all
     }
 
     // TODO check file names
@@ -90,7 +90,7 @@ namespace pagefs {
         }
         LRUHashItem *t = lruTable_.get(fileId, pageNum);
         if (t == nullptr) {
-            Debug::info("not found t");
+            Debug::info("not found item");
             BufferPage p;
             p.data = new char[PAGE_SIZE];
             memset(p.data, 0, PAGE_SIZE);
@@ -108,7 +108,7 @@ namespace pagefs {
 
             return p.data;
         } else {
-            Debug::info("found t");
+            Debug::info("found item");
             lruList_.remove(t->node);
             t->node = lruList_.push_back(t);
             return t->data.data;
@@ -179,7 +179,7 @@ namespace pagefs {
         int key = hash(p.fileId, p.pageNum);
         int hashValue = key;
         while (table[key].node != nullptr) {
-            key = (key + 1) & MAX_BUFFER_SIZE;
+            key = (key + 1) & MAX_BUFFER_SIZE_M1;
         }
         table[key].data = p;
         table[key].hashValue = hashValue;
@@ -193,7 +193,7 @@ namespace pagefs {
         if (table[key].node == nullptr)
             return nullptr;
         while (table[key].hashValue != hashValue) {
-            key = (key + 1) & MAX_BUFFER_SIZE;
+            key = (key + 1) & MAX_BUFFER_SIZE_M1;
             if (table[key].node == nullptr)
                 return nullptr;
             if (key == hashValue) {
@@ -209,7 +209,7 @@ namespace pagefs {
         if (table[key].node == nullptr)
             throw ItemNotFound();
         while (table[key].data.fileId != fileId || table[key].data.pageNum != pageNum) {
-            key = (key + 1) & MAX_BUFFER_SIZE;
+            key = (key + 1) & MAX_BUFFER_SIZE_M1;
             if (table[key].node == nullptr || key == hashValue) {
                 throw ItemNotFound();
             }
@@ -224,7 +224,7 @@ namespace pagefs {
         LRUHashItem res = table[i];
         table[i].node = nullptr;
         do {
-            j = (j + 1) & MAX_BUFFER_SIZE;
+            j = (j + 1) & MAX_BUFFER_SIZE_M1;
             if (table[j].node == nullptr)
                 break;
             k = table[j].hashValue;
@@ -251,6 +251,7 @@ namespace pagefs {
         n->item = p;
         n->prev = nullptr;
         n->next = head;
+        if (head != nullptr) head->prev = n;
         head = n;
         if (tail == nullptr) tail = head;
         return head;
@@ -261,6 +262,7 @@ namespace pagefs {
         n->item = p;
         n->prev = tail;
         n->next = nullptr;
+        if (tail != nullptr) tail->next = n;
         tail = n;
         if (head == nullptr) head = tail;
         return tail;
