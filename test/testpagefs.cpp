@@ -37,6 +37,30 @@ void testSingleIO2() {
     cout << "forced!" << endl;
 }
 
+void testSingleIO3() {
+    char msg[200];
+    cout << "single io 3 test begin!" << endl;
+    pagefs::PageFS *fs = pagefs::PageFS::getInstance();
+//    fs->createFile("test3.db", true);
+    pagefs::FileId f = fs->openFile("test3.db");
+    cout << "opened!" << endl;
+    for (int i = 0; i < 20; i++) {
+        cout << i << endl;
+        char *c = fs->loadPage(f, i);
+        fs->pinPage(f, i);
+        sprintf(msg, "Page No.%d", i);
+        cout << "loaded!" << endl;
+        assert(c != nullptr);
+        memset(c, 0, pagefs::PAGE_SIZE);
+        strcpy(c, msg);
+        cout << "written!" << endl;
+        fs->markDirty(f, i);
+        fs->unpinPage(f, i);
+        fs->forcePage(f, i);
+        cout << i << " done!" << endl;
+    }
+}
+
 void testBuffer() {
     pagefs::PageFS *fs = pagefs::PageFS::getInstance();
     cout << "buffer test begin!" << endl;
@@ -52,6 +76,7 @@ void testBuffer() {
 
 int main() {
 //    testBuffer();
-    testSingleIO2();
+//    testSingleIO2();
+    testSingleIO3();
     return 0;
 }
