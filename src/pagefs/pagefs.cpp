@@ -145,7 +145,7 @@ namespace pagefs {
         if (p == nullptr)
             return false;
         LRUHashItem *t = lruList_.remove(p);
-        int key = (int)((t - lruTable_.table) / sizeof(LRUHashItem));
+        int key = (int)(t - lruTable_.table);
         return writeBack(lruTable_.popByKey(key).data);
     }
 
