@@ -21,7 +21,7 @@ namespace sqleast {
             Index(const char *indexName);
 
             // void insertEntry(int key, RID value);
-            // void findEntry(int key);
+             void searchEntry(int key);
 
         private:
             FileHandle handle_;
