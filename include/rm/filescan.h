@@ -9,14 +9,22 @@ namespace sqleast {
         class FileScan {
 
         public:
-            FileScan(FileHandle &handle, AttrType attrType, int attrLength, int attrOffset, CompOp compOp, void *value);
+            FileScan(FileHandle &handle,
+                    AttrType attrType, int attrLength, int attrOffset,
+                    int nullBitOffset, int nullBitMask,
+                    CompOp compOp, void *value);
             ~FileScan();
 
             Record next();
 
         private:
             int pageNum_, slotNum_;
-
+            AttrType attrType_;
+            int attrLength_, attrOffset_, nullBitOffset_, nullBitMask_;
+            CompOp compOp_;
+            void *value_;
+            FileHandle handle_;
+            FileInfo info_;
         };
 
     }

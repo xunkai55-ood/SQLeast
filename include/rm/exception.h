@@ -7,6 +7,8 @@ namespace sqleast {
         class RMException {};
 
         class RecordTooLargeException : public RMException {};
+
+        class EOFException : public RMException {};
     }
 }
 

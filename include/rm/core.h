@@ -1,6 +1,7 @@
 #ifndef RM_CORE_H
 #define RM_CORE_H
 
+#include "sqleast.h"
 #include "pagefs/pagefs.h"
 
 namespace sqleast {
@@ -27,7 +28,8 @@ namespace sqleast {
 
         class RecordManager {
 
-            static void createFile(const char *fileName, int dataSize);
+        public:
+            static void createFile(const char *fileName, int dataSize, bool override = false);
             static FileHandle openFile(const char *fileName);
             static void destroyFile(const char *fileName);
 

@@ -15,67 +15,71 @@ namespace sqleast {
 
         }
 
-        Record FileHandle::getRec(const RID rid) {
+        Record FileHandle::getRec(RID rid) {
             char *pData = fs_.loadPage(fid_, rid.pageNum);
             pData = moveToRec(pData);
             pData += rid.slotNum * info_.recordSize;
             return Record(rid, pData);
         }
 
-        RID FileHandle::updateRec(const RID rid, char *const rData) {
+        RID FileHandle::updateRec(RID rid, char *rData) {
             char *pData = fs_.loadPage(fid_, rid.pageNum);
             pData = moveToRec(pData);
             pData += rid.slotNum * info_.recordSize;
-            memcpy(rData, pData, (size_t)info_.recordSize);
+            memcpy(pData, rData, (size_t)info_.recordSize);
             *(unsigned int *)pData |= REC_ALIVE;
             commitPage(rid.pageNum);
             return RID(rid.pageNum, rid.slotNum);
         }
 
-        RID FileHandle::insertRec(char *const rData) {
+        RID FileHandle::insertRec(char *rData) {
             int pageNum = info_.firstEmptyPage;
             int slotNum = 0;
-            while (pageNum != 0) {
-                char *pData = fs_.loadPage(fid_, pageNum);
-                PageHeader pHeader = getPageHeader(pData);
-                char *bitmap = pHeader.slotBitmap;
-                char *records = pHeader.slotBitmap + info_.slotBitmapSize;
-                bool found = false;
+            while (true) {
+                if (pageNum == 0) pageNum = newPage();
+                while (pageNum != 0) {
+                    char *pData = fs_.loadPage(fid_, pageNum);
+                    PageHeader pHeader = getPageHeader(pData);
+                    char *bitmap = pHeader.slotBitmap;
+                    char *records = pHeader.slotBitmap + info_.slotBitmapSize;
+                    bool found = false;
 
-                while (bitmap < records) {
-                    if ((unsigned char)(*bitmap) != 255) { // find avaliable slot
-                        slotNum = Bitmap8Util::lowest0((unsigned char)*bitmap);
-                        *bitmap |= 1 << slotNum;
-                        pHeader.emptySlot -= 1;
-                        if (pHeader.emptySlot == 0) { // remove the page from empty array
-                            if (pHeader.nextPage != 0) {
-                                char *next = fs_.loadPage(fid_, pHeader.nextPage);
-                                PageHeader nextPH = getPageHeader(next);
-                                writePageHeader(next, nextPH);
+                    while (bitmap < records) {
+                        if ((unsigned char) (*bitmap) != 255) { // find avaliable slot
+                            slotNum = Bitmap8Util::lowest0((unsigned char) *bitmap);
+                            *bitmap |= 1 << slotNum;
+                            pHeader.emptySlot -= 1;
+                            if (pHeader.emptySlot == 0) { // remove the page from empty array
+                                if (pHeader.nextPage != 0) {
+                                    char *next = fs_.loadPage(fid_, pHeader.nextPage);
+                                    PageHeader nextPH = getPageHeader(next);
+                                    writePageHeader(next, nextPH);
+                                }
+                                if (pageNum == info_.firstEmptyPage) {
+                                    info_.firstEmptyPage = pHeader.nextPage;
+                                    commitInfo();
+                                }
                             }
-                            if (pageNum == info_.firstEmptyPage) {
-                                info_.firstEmptyPage = pHeader.nextPage;
-                                commitInfo();
-                            }
+                            writePageHeader(pData, pHeader);
+                            found = true;
+                            slotNum += (int) ((bitmap - pHeader.slotBitmap) << 3);
+                            break;
                         }
-                        commitInfo();
-                        found = true;
-                        slotNum += (int)((bitmap - pHeader.slotBitmap) << 3);
+                        bitmap += 1;
+                    }
+                    if (!found) {
+                        pageNum = pHeader.nextPage;
+                    } else {
                         break;
                     }
-                    bitmap += 1;
                 }
-                if (!found) {
-                    pageNum = pHeader.nextPage;
-                } else {
-                    break;
-                }
+                if (pageNum > 0) break;
             }
             updateRec(RID(pageNum, slotNum), rData);
             return RID(pageNum, slotNum);
         }
 
-        void FileHandle::deleteRec(const RID rid) {
+        void FileHandle::deleteRec(RID rid) {
             char *pData = fs_.loadPage(fid_, rid.pageNum);
             PageHeader pHeader = getPageHeader(pData);
             if (pHeader.emptySlot == 0) {
@@ -99,12 +103,16 @@ namespace sqleast {
             pHeader.nextPage = info_.firstEmptyPage;
             info_.firstEmptyPage = info_.totalPageNum;
             writePageHeader(pData, pHeader);
-            commitPage(info_.totalPageNum);
 
             char *bitmap = pHeader.slotBitmap;
             memset(bitmap, 0, (size_t)info_.slotBitmapSize);
-            commitInfo();
+            if (info_.slotPerPage % 8) {
+                bitmap += info_.slotBitmapSize - 1;
+                *bitmap = (unsigned char)(255) << (info_.slotPerPage % 8);
+            }
+            commitPage(info_.totalPageNum);
             info_.totalPageNum += 1;
+            commitInfo();
             return info_.totalPageNum - 1;
         }
 

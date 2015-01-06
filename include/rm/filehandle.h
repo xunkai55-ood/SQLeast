@@ -1,14 +1,10 @@
 #ifndef RM_FILEHANDLE_H
 #define RM_FILEHANDLE_H
 
-#include "rid.h"
-#include "record.h"
 #include "core.h"
 
 namespace sqleast {
     namespace rm {
-
-        typedef pagefs::FileId FileId;
 
         class FileHandle {
 
@@ -16,11 +12,12 @@ namespace sqleast {
             FileHandle(FileId fid);
             ~FileHandle();
 
-            Record getRec(const RID rid);
-            RID insertRec(char *const rData);
-            RID updateRec(const RID rid, char *const rData);
-            void deleteRec(const RID rid);
+            Record getRec(RID rid);
+            RID insertRec(char *rData);
+            RID updateRec(RID rid, char *rData);
+            void deleteRec(RID rid);
             void forcePages();
+            inline FileInfo getInfo() { return info_; }
 
         private:
             FileId fid_;

@@ -99,9 +99,9 @@ namespace pagefs {
         void closeFile(FileId f);
         char *loadPage(int fileId, int pageNum);
         void forcePage(int fileId, int pageNum);
-        void pinPage(int fileId, int pageNum);
         void unpinPage(int fileId, int pageNum);
         void markDirty(int fileId, int pageNum);
+        void commitAll(int fileId);  // fileId == -1: commit all whatever the fileid is
 
         void printState(std::ostream &os);
 
@@ -118,6 +118,7 @@ namespace pagefs {
 
         /* buffer */
 
+        void pinPage(int fileId, int pageNum);
         bool commitOnePage();
         bool writeBack(BufferPage p);
 

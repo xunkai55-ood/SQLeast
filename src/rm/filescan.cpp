@@ -13,11 +13,9 @@ namespace sqleast {
         nullBitOffset_(nullBitOffset), nullBitMask_(nullBitMask), value_(value),
         pageNum_(1), slotNum_(0), info_(handle.getInfo())
         {
-            // TODO
         }
 
         FileScan::~FileScan() {
-            // TODO
         }
 
         Record FileScan::next() {
