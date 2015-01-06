@@ -10,6 +10,7 @@ namespace sqleast {
 
         struct Node {
             bool isLeaf;
+            int size;
             RID n[B_PLUS_TREE_BRANCH + 1];
             int k[B_PLUS_TREE_BRANCH + 1];
             RID parent;
