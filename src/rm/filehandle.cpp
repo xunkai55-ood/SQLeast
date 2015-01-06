@@ -27,6 +27,7 @@ namespace sqleast {
             pData = moveToRec(pData);
             pData += rid.slotNum * info_.recordSize;
             memcpy(rData, pData, (size_t)info_.recordSize);
+            *(unsigned int *)pData |= REC_ALIVE;
             commitPage(rid.pageNum);
             return RID(rid.pageNum, rid.slotNum);
         }
@@ -85,11 +86,12 @@ namespace sqleast {
             pHeader.emptySlot += 1;
             *(pHeader.slotBitmap + (rid.slotNum >> 3)) &= ~(1 << (rid.slotNum & 7));
             writePageHeader(pData, pHeader);
+            pData = moveToRec(pData);
+            *(unsigned int *)pData &= ~REC_ALIVE;
             commitPage(rid.pageNum);
         }
 
         int FileHandle::newPage() {
-            info_.totalPageNum += 1;
             char *pData = fs_.loadPage(fid_, info_.totalPageNum);
 
             PageHeader pHeader = getPageHeader(pData);
@@ -102,7 +104,8 @@ namespace sqleast {
             char *bitmap = pHeader.slotBitmap;
             memset(bitmap, 0, (size_t)info_.slotBitmapSize);
             commitInfo();
-            return info_.totalPageNum;
+            info_.totalPageNum += 1;
+            return info_.totalPageNum - 1;
         }
 
     }

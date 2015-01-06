@@ -17,7 +17,7 @@ namespace pagefs {
 
     PageFS::~PageFS() {
         std::cout << "destructing pagefs" << std::endl;
-        while (commitOnePage());
+        commitAll(-1);
     }
 
     void PageFS::printState(std::ostream &os) {
@@ -80,6 +80,7 @@ namespace pagefs {
         if (entries_[f].counter == 0) {
             throw FileClosedException();
         }
+        commitAll(f);
         entries_[f].counter -= 1;
         if (entries_[f].counter == 0) {
             entries_[f].fileId = -1;  // release
@@ -99,7 +100,7 @@ namespace pagefs {
                 if (!commitOnePage())
                     throw NoBufError();
             }
-            Debug::info("not found item");
+//            Debug::info("not found item");
             BufferPage p;
             p.data = new char[PAGE_SIZE];
             memset(p.data, 0, PAGE_SIZE);
@@ -121,7 +122,7 @@ namespace pagefs {
 
             return p.data;
         } else {
-            Debug::info("found item");
+//            Debug::info("found item");
             lruList_.remove(t->node);
             t->node = lruList_.push_back(t);
             return t->data.data;
@@ -161,6 +162,19 @@ namespace pagefs {
         LRUHashItem *t = lruList_.remove(p);
         int key = (int)(t - lruTable_.table);
         return writeBack(lruTable_.popByKey(key).data);
+    }
+
+    void PageFS::commitAll(int fid) {
+        LRUListNode *p = lruList_.head, *q;
+        while (p != nullptr) {
+            q = p->next;
+            if (fid < 0 || p->item->data.fileId == fid) {
+                LRUHashItem *t = lruList_.remove(p);
+                int key = (int)(t - lruTable_.table);
+                writeBack(lruTable_.popByKey(key).data);
+            }
+            p = q;
+        }
     }
 
     bool PageFS::writeBack(BufferPage p) {
