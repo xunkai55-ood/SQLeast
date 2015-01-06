@@ -29,6 +29,7 @@ namespace sqleast {
 
             RID insertEntry(int key, RID value);
             RID searchEntry(int key);
+            bool removeEntry(int key);
 
         private:
             FileHandle handle_;

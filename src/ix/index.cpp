@@ -36,7 +36,6 @@ namespace sqleast {
         bool Node::insertN(RID value, int position) {
             if(size == B_PLUS_TREE_BRANCH + 1)
                 return false;
-            size ++;
             for(int i = B_PLUS_TREE_BRANCH ; i > position ; i --)
                 n[i] = n[i-1];
             n[position] = value;
@@ -55,7 +54,6 @@ namespace sqleast {
         bool Node::removeN(int position) {
             if(size == 0)
                 return false;
-            size --;
             for(int i = position ; i < B_PLUS_TREE_BRANCH ; i ++)
                 n[i] = n[i+1];
             return true;
@@ -93,6 +91,20 @@ namespace sqleast {
             solveOverFlow(hot_);
             forcePages();
             return value;
+        }
+
+        bool Index::removeEntry(int key) {
+            RID v = searchEntry(key);
+            if(v.pageNum < 0)
+                return false;
+            Node* leaf = getNode(hot_);
+            int rank = leaf->getPosition(key);
+            leaf->removeK(rank);
+            leaf->removeN(rank);
+            decIndexSize();
+            solveUnderFlow(hot_);
+            forcePages();
+            return true;
         }
 
         void Index::solveOverFlow(RID rid) {
@@ -157,6 +169,9 @@ namespace sqleast {
                 n->parent = pid;
                 solveOverFlow(pid);
             }
+        }
+
+        void Index::solveUnderFlow(RID rid) {
         }
 
         Node *Index::getRoot() {
