@@ -1,4 +1,3 @@
-#include <Foundation/Foundation.h>
 #include "rm/filescan.h"
 #include "rm/filehandle.h"
 #include "rm/exception.h"

@@ -156,7 +156,7 @@ namespace pagefs {
         LRUListNode *p = lruList_.head;
         while (p != nullptr && p->item->data.pinned)
             p = p->next;
-        Debug::info("found unpined");
+//        Debug::info("found unpined");
         if (p == nullptr)
             return false;
         LRUHashItem *t = lruList_.remove(p);
@@ -250,7 +250,7 @@ namespace pagefs {
         int i = j, k;
         total -= 1;
         LRUHashItem res = table[i];
-        Debug::info("start popping");
+//        Debug::info("start popping");
         std::cout << i << std::endl;
         table[i].node = nullptr;
         do {
@@ -264,7 +264,7 @@ namespace pagefs {
             table[j].node = nullptr;
             i = j;
         } while (true);
-        Debug::info("popped");
+//        Debug::info("popped");
         return res;
     }
 
