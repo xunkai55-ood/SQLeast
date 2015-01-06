@@ -31,6 +31,9 @@ namespace sqleast {
         int slotNum;
 
         RID(const int _pageNum, const int _slotNum): pageNum(_pageNum), slotNum(_slotNum) {}
+        bool operator==(const RID &b) {
+            return pageNum == b.pageNum && slotNum == b.slotNum;
+        }
     };
 
     struct Record {
