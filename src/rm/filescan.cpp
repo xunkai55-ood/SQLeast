@@ -1,3 +1,4 @@
+#include <Foundation/Foundation.h>
 #include "rm/filescan.h"
 #include "rm/filehandle.h"
 #include "rm/exception.h"
@@ -25,7 +26,51 @@ namespace sqleast {
             Record c;
             do {
                 c = handle_.getRec(RID(pageNum_, slotNum_));
-            } while ((c.getFlag() & REC_ALIVE) == 0);
+                if (c.getFlag() & REC_ALIVE) {
+                    if (compOp_ == NO_OP) {
+                        break;
+                    } else if (compOp_ == IS_NULL_OP) {
+                        if (*(c.getData() + nullBitOffset_) & nullBitMask_)
+                            break;
+                    } else if (compOp_ == NOT_NULL_OP) {
+                        if (*(c.getData() + nullBitOffset_) & nullBitMask_ == 0)
+                            break;
+                    } else if (attrType_ == INT) {
+                        int attr = *(c.getData() + attrOffset_);
+                        int flag = 0;
+                        // NO_OP, EQ_OP, LT_OP, GT_OP, LE_OP, GE_OP, NE_OP, IS_NULL_OP, NOT_NULL_OP
+                        switch (compOp_) {
+                            case EQ_OP: flag = (*(int*)value_ == attr); break;
+                            case LT_OP: flag = (*(int*)value_ > attr); break;
+                            case GT_OP: flag = (*(int*)value_ < attr); break;
+                            case LE_OP: flag = (*(int*)value_ >= attr); break;
+                            case GE_OP: flag = (*(int*)value_ <= attr); break;
+                            case NE_OP: flag = (*(int*)value_ != attr); break;
+                            default: flag = 0;
+                        }
+                        if (flag) break;
+                    } else if (attrType_ == STRING) {
+                        char *attr = c.getData() + attrOffset_;
+                        char *value = (char *) value_;
+                        int i = 0;
+                        while (i < attrLength_ && (*attr == *value)) {
+                            i++;
+                            attr++;
+                            value++;
+                        }
+                        if (i == attrLength_) {
+                            if (compOp_ == EQ_OP || compOp_ == LE_OP || compOp_ == GE_OP)
+                                break;
+                        } else if (*attr < *value) {
+                            if (compOp_ == LT_OP || compOp_ == LE_OP || compOp_ == NE_OP)
+                                break;
+                        } else {
+                            if (compOp_ == GT_OP || compOp_ == GE_OP || compOp_ == NE_OP)
+                                break;
+                        }
+                    }
+                }
+            } while (true);
             slotNum_ += 1;
             if (slotNum_ == info_.slotPerPage) {
                 slotNum_ = 0;
