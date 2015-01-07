@@ -12,11 +12,10 @@ namespace sqleast {
             FileHandle(FileId fid);
             ~FileHandle();
 
-            Record getRec(RID rid);
-            RID allocateRec();
-            RID insertRec(char *rData);
-            RID updateRec(RID rid, char *rData);
-            void deleteRec(RID rid);
+            void getRec(RID rid, Record &r);
+            void insertRec(Record &r);
+            void updateRec(const Record &r);
+            void deleteRec(const Record &r);
             void forcePages();
             inline FileInfo getInfo() { return info_; }
             inline char *getFileInfo() { return fs_.loadPage(fid_, 0); }
@@ -56,6 +55,7 @@ namespace sqleast {
             }
 
             int newPage();
+            RID allocateRec();
         };
     }
 }

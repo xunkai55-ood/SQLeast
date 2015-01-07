@@ -1,5 +1,6 @@
 #include "rm/bitmaputil.h"
 #include "rm/filehandle.h"
+#include "rm/exception.h"
 
 namespace sqleast {
     namespace rm {
@@ -15,22 +16,26 @@ namespace sqleast {
             forcePages();
         }
 
-        Record FileHandle::getRec(RID rid) {
+        void FileHandle::getRec(RID rid, Record &r) {
+            if (r.size != info_.recordSize)
+                throw RecordSizeError();
             char *pData = fs_.loadPage(fid_, rid.pageNum);
             pData = moveToRec(pData);
             pData += rid.slotNum * info_.recordSize;
-            return Record(rid, pData);
+            memcpy(r.rData, pData, (size_t)r.size);
+            r.rid = rid;
         }
 
-        RID FileHandle::updateRec(RID rid, char *rData) {
-            char *pData = fs_.loadPage(fid_, rid.pageNum);
+        void FileHandle::updateRec(const Record &r) {
+            if (r.rid.pageNum <= 0 || r.rid.slotNum < 0)
+                throw InvalidRecordException();
+            if (r.size != info_.recordSize)
+                throw RecordSizeError();
+            char *pData = fs_.loadPage(fid_, r.rid.pageNum);
             pData = moveToRec(pData);
-            pData += rid.slotNum * info_.recordSize;
-            if (rData != nullptr)
-                memcpy(pData, rData, (size_t)(info_.recordSize) - sizeof(int));
-            *(unsigned int *)pData |= REC_ALIVE;
-            commitPage(rid.pageNum);
-            return RID(rid.pageNum, rid.slotNum);
+            pData += r.rid.slotNum * info_.recordSize;
+            memcpy(pData, r.rData, (size_t)(info_.recordSize));
+            commitPage(r.rid.pageNum);
         }
 
         RID FileHandle::allocateRec() {
@@ -79,13 +84,13 @@ namespace sqleast {
             return RID(pageNum, slotNum);
         }
 
-        RID FileHandle::insertRec(char *rData) {
-            RID rid = allocateRec();
-            updateRec(rid, rData);
-            return rid;
+        void FileHandle::insertRec(Record &r) {
+            r.rid = allocateRec();
+            updateRec(r);
         }
 
-        void FileHandle::deleteRec(RID rid) {
+        void FileHandle::deleteRec(const Record &r) {
+            RID rid = r.rid;
             char *pData = fs_.loadPage(fid_, rid.pageNum);
             PageHeader pHeader = getPageHeader(pData);
             if (pHeader.emptySlot == 0) {
