@@ -1,7 +1,9 @@
 #include "rm/core.h"
 #include "rm/filehandle.h"
 #include "rm/filescan.h"
+#include "sqleast.h"
 
+using namespace sqleast;
 using namespace sqleast::rm;
 using namespace std;
 
@@ -24,16 +26,16 @@ void testDestroyFile() {
 
 void testStoreRecords() {
     int flagLen = sizeof(int);
-    int dataLen = 40;
+    int dataLen = 28;
     int bitmapLen = 0;
     int rLen = flagLen + dataLen + bitmapLen;
     RecordManager::createFile("rmtest.db", rLen, true);
-    char buf[200];
     FileHandle f = RecordManager::openFile("rmtest.db");
-    for (int i = 0; i < 10; i++) {
-        memset(buf, 0, sizeof(buf));
-        sprintf(buf + sizeof(int), "hello how are you this is no %d", i);
-        f.insertRec(buf);
+    Record r(rLen);
+    for (int i = 0; i < 20; i++) {
+        memset(r.rData, 0, r.size);
+        sprintf(r.rData + sizeof(int), "fuck you no %d", i);
+        f.insertRec(r);
     }
 }
 

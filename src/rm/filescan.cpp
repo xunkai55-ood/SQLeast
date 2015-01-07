@@ -22,9 +22,9 @@ namespace sqleast {
             if (pageNum_ == info_.totalPageNum) {
                 throw EOFException();
             }
-            Record c;
+            Record c(info_.recordSize);
             do {
-                c = handle_.getRec(RID(pageNum_, slotNum_));
+                handle_.getRec(RID(pageNum_, slotNum_), c);
                 if (c.getFlag() & REC_ALIVE) {
                     if (compOp_ == NO_OP) {
                         break;

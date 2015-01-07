@@ -8,12 +8,11 @@ namespace sqleast {
 
         using namespace pagefs;
 
-        void RecordManager::createFile(const char *fileName, int dataSize, bool override) {
+        void RecordManager::createFile(const char *fileName, int recordSize, bool override) {
             PageFS &fs = PageFS::getInstance();
             fs.createFile(fileName, override);
             int fid = fs.openFile(fileName);
             rm::FileHandle handle(fid);
-            int recordSize = dataSize + (int)sizeof(int);
 
             FileInfo *infoPtr = (FileInfo*) fs.loadPage(fid, 0);
             infoPtr->firstEmptyPage = 0;

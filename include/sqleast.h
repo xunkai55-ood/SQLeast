@@ -30,6 +30,7 @@ namespace sqleast {
         int pageNum;
         int slotNum;
 
+        RID(): pageNum(-1), slotNum(-1) {}
         RID(const int _pageNum, const int _slotNum): pageNum(_pageNum), slotNum(_slotNum) {}
         bool operator==(const RID &b) {
             return pageNum == b.pageNum && slotNum == b.slotNum;
@@ -39,12 +40,21 @@ namespace sqleast {
     struct Record {
         RID rid;
         char *rData;
+        const size_t size;
 
-        Record(const RID _rid, char* _rData): rid(_rid), rData(_rData) {}
-        Record(): rid(RID(-1, -1)), rData(nullptr) {}
+        Record(int _size): size((size_t)_size) {
+            rData = new char[size];
+        }
+
+        ~Record() {
+            delete[] rData;
+        }
+
         Record &operator=(const Record &r) {
             rid = r.rid;
             rData = r.rData;
+            delete[] rData;
+            memcpy(rData, r.rData, size);
             return *this;
         }
 
