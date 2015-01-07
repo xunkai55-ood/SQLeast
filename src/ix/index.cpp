@@ -1,5 +1,5 @@
 #include "ix/index.h"
-#include "rm/filehandle.h
+#include "rm/filehandle.h"
 
 namespace sqleast {
     namespace ix {
@@ -435,5 +435,29 @@ namespace sqleast {
             getNode(getRootRID(), node);
         }
 
+        void Index::printIndex() {
+            printNode(getRootRID());
+        }
+
+        void Index::printNode(RID rid){
+            Node n;
+            getNode(rid, n);
+            if(n.isLeaf){
+                for(int i = 0 ; i < n.size ; i ++)
+                {
+                    std::cout << "(" << n.n[i].pageNum << "," << n.n[i].slotNum << ")" << " " << n.k[i];
+                }
+                std::cout << std::endl;
+            }
+            else{
+                for(int i = 0 ; i < n.size ; i ++)
+                {
+                    std::cout << "(" << n.n[i].pageNum << "," << n.n[i].slotNum << ")" << " " << n.k[i];
+                }
+                std::cout << "(" << n.n[n.size].pageNum << "," << n.n[n.size].slotNum << ")" << std::endl;
+                for(int i = 0 ; i <= n.size ; i ++)
+                    printNode(n.n[i]);
+            }
+        }
     }
 }
