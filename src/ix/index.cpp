@@ -126,16 +126,17 @@ namespace sqleast {
 
         RID Index::searchEntry(int key) {
             hot_ = getRootRID();
-            Node *v = getNode(hot_);
+            Node v;
+            getNode(hot_, v);
             while(true){
-                int r = v->getPosition(key);
-                if(!v->isLeaf){
-                    hot_ = v->n[r+1];
-                    v = getNode(hot_);
+                int r = v.getPosition(key);
+                if(!v.isLeaf){
+                    hot_ = v.n[r+1];
+                    getNode(hot_, v);
                 }
                 else{
-                    if(r >= 0 && v->k[r] == key){
-                        return v->n[r];
+                    if(r >= 0 && v.k[r] == key){
+                        return v.n[r];
                     }
                     else{
                         return RID(-1, r+1); // refer to not find and the second value means the expected position
@@ -149,9 +150,10 @@ namespace sqleast {
             if(v.pageNum >= 0)
                 return v;
             int posi = v.slotNum;
-            Node* leaf = getNode(hot_);
-            leaf->insertK(key, posi);
-            leaf->insertN(value, posi);
+            Node leaf;
+            getNode(hot_, leaf);
+            leaf.insertK(key, posi);
+            leaf.insertN(value, posi);
             incIndexSize();
             solveOverFlow(hot_);
             forcePages();
@@ -162,10 +164,11 @@ namespace sqleast {
             RID v = searchEntry(key);
             if(v.pageNum < 0)
                 return false;
-            Node* leaf = getNode(hot_);
-            int rank = leaf->getPosition(key);
-            leaf->removeK(rank);
-            leaf->removeN(rank);
+            Node leaf;
+            getNode(hot_, leaf);
+            int rank = leaf.getPosition(key);
+            leaf.removeK(rank);
+            leaf.removeN(rank);
             decIndexSize();
             solveUnderFlow(hot_);
             forcePages();
@@ -173,65 +176,72 @@ namespace sqleast {
         }
 
         void Index::solveOverFlow(RID rid) {
-            Node* v = getNode(rid);
-            if(v->isLeaf) {
-                if (B_PLUS_TREE_BRANCH + 1 >= v->size) return;
+            Node v;
+            getNode(rid, v);
+            if(v.isLeaf) {
+                if (B_PLUS_TREE_BRANCH + 1 >= v.size) return;
                 int half = (B_PLUS_TREE_BRANCH + 1) / 2;
                 RID nid = allocateNode();
-                Node *n = getNode(nid);
-                n->isLeaf = true;
+                Node n;
+                getNode(nid, n);
+                n.isLeaf = true;
                 for (int j = 0; j < B_PLUS_TREE_BRANCH - half; j++) {
-                    n->insertN(v->n[half + 1], j);
-                    v->removeN(half + 1);
-                    n->insertK(v->k[half + 1], j);
-                    v->removeK(half + 1);
+                    n.insertN(v.n[half + 1], j);
+                    v.removeN(half + 1);
+                    n.insertK(v.k[half + 1], j);
+                    v.removeK(half + 1);
                 }
                 if(getRootRID() == rid){
                     RID rt = allocateNode();
                     setRoot(rt);
-                    Node* root = getNode(rt);
-                    root->isLeaf = false;
-                    root->insertN(rid, 0);
-                    v->parent = rt;
+                    Node root;
+                    getNode(rt, root);
+                    root.isLeaf = false;
+                    root.insertN(rid, 0);
+                    v.parent = rt;
                 }
-                RID pid = v->parent;
-                Node* p = getNode(pid);
-                int rank = p->getPosition(v->k[0]) + 1;
-                p->insertK(v->k[half], rank);
-                p->insertN(nid, rank + 1);
-                n->parent = pid;
+                RID pid = v.parent;
+                Node p;
+                getNode(pid, p);
+                int rank = p.getPosition(v.k[0]) + 1;
+                p.insertK(v.k[half], rank);
+                p.insertN(nid, rank + 1);
+                n.parent = pid;
                 solveOverFlow(pid);
             }
             else
             {
-                if (B_PLUS_TREE_BRANCH >= v->size) return;
+                if (B_PLUS_TREE_BRANCH >= v.size) return;
                 int half = (B_PLUS_TREE_BRANCH + 1) / 2;
                 RID nid = allocateNode();
-                Node *n = getNode(nid);
-                n->isLeaf = false;
+                Node n;
+                getNode(nid, n);
+                n.isLeaf = false;
                 for (int j = 0; j < B_PLUS_TREE_BRANCH - half ; j++) {
-                    n->insertN(v->n[half + 1], j);
-                    v->removeN(half + 1);
-                    n->insertK(v->k[half + 1], j);
-                    v->removeK(half + 1);
+                    n.insertN(v.n[half + 1], j);
+                    v.removeN(half + 1);
+                    n.insertK(v.k[half + 1], j);
+                    v.removeK(half + 1);
                 }
-                n->insertN(v->n[half + 1], B_PLUS_TREE_BRANCH - half);
-                v->removeN(half + 1);
+                n.insertN(v.n[half + 1], B_PLUS_TREE_BRANCH - half);
+                v.removeN(half + 1);
                 if(getRootRID() == rid){
                     RID rt = allocateNode();
                     setRoot(rt);
-                    Node* root = getNode(rt);
-                    root->isLeaf = false;
-                    root->insertN(rid, 0);
-                    v->parent = rt;
+                    Node root;
+                    getNode(rt, root);
+                    root.isLeaf = false;
+                    root.insertN(rid, 0);
+                    v.parent = rt;
                 }
-                RID pid = v->parent;
-                Node* p = getNode(pid);
-                int rank = p->getPosition(v->k[0]) + 1;
-                p->insertK(v->k[half], rank);
-                p->insertN(nid, rank + 1);
-                v->removeK(half);
-                n->parent = pid;
+                RID pid = v.parent;
+                Node p;
+                getNode(pid, p);
+                int rank = p.getPosition(v.k[0]) + 1;
+                p.insertK(v.k[half], rank);
+                p.insertN(nid, rank + 1);
+                v.removeK(half);
+                n.parent = pid;
                 solveOverFlow(pid);
             }
         }
@@ -239,8 +249,8 @@ namespace sqleast {
         void Index::solveUnderFlow(RID rid) {
         }
 
-        Node *Index::getRoot() {
-            return getNode(getRootRID());
+        void Index::getRoot(Node &node) {
+            getNode(getRootRID(), node);
         }
 
     }

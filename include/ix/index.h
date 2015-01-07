@@ -57,7 +57,7 @@ namespace sqleast {
             void commitIndexInfo();
 
             // TODO yy part
-            Node *getRoot();
+            void getRoot(Node &node);
             void solveOverFlow(RID rid);
             void solveUnderFlow(RID rid);
         };
