@@ -60,17 +60,31 @@ namespace sqleast {
 
         /* index */
 
+        void Index::createIndex(const char *indexName) {
+            std::cout << "very before open index" << std::endl;
+            rm::RecordManager::createFile(indexName, sizeof(Node), true);
+            std::cout << "before open index" << std::endl;
+            Index idx(indexName);
+            RID rid = idx.allocateNode();
+            idx.indexInfo_.indexSize = 0;
+            idx.setRoot(rid);
+            Node n;
+            idx.getNode(rid, n);
+            n.isLeaf = true;
+            n.size = 0;
+            n.parent = RID(-1, -1);
+            memset(n.n, 0, sizeof(n.n));
+            memset(n.k, 0, sizeof(n.n));
+            idx.commitNode(rid, n);
+            std::cout << "index created" << std::endl;
+        }
+
         Index::Index(const char *indexName):
                 handle_(rm::RecordManager::openFile(indexName))
         {
-            try {
-                rm::RecordManager::createFile(indexName, sizeof(Node), false);
-            } catch (pagefs::FileExistsException) {
-                //
-            }
             hot_ = RID(-1, -1);
             char *p = handle_.getFileInfo();
-            p += sizeof(rm::FileHandle);
+            p += sizeof(rm::FileInfo);
             indexInfo_ = *(IndexInfo *)p;
         }
 
@@ -442,6 +456,7 @@ namespace sqleast {
         void Index::printNode(RID rid){
             Node n;
             getNode(rid, n);
+//            std::cout << "SIZE: " << n.size << " ISLEAF: " << n.isLeaf << std::endl;
             if(n.isLeaf){
                 for(int i = 0 ; i < n.size ; i ++)
                 {

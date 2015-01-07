@@ -14,6 +14,7 @@ namespace sqleast {
 
         FileHandle::~FileHandle() {
             forcePages();
+            fs_.closeFile(fid_);
         }
 
         char *FileHandle::getRecDataPtr(RID rid) {

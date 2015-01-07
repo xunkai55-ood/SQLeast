@@ -6,6 +6,7 @@ using namespace std;
 
 int main()
 {
+    sqleast::ix::Index::createIndex("test.idx");
     sqleast::ix::Index Tree("test.idx");
     Tree.printIndex();
     return 0;

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cstring>
 #include <cstdio>
+#include <assert.h>
 
 namespace pagefs {
 
@@ -10,6 +11,7 @@ namespace pagefs {
     PageFS::PageFS(): entryCnt_(0) {
         lruList_ = LRUList();
         lruTable_ = LRUHash();
+
         for (int i = 0; i < MAX_BUFFER_SIZE; i++) {
             lruTable_.table[i].node = nullptr;
         }
@@ -86,6 +88,12 @@ namespace pagefs {
             entries_[f].fileId = -1;  // release
             fclose(filePtr_[f]);
         }
+        for (int i = 0; i < MAX_BUFFER_SIZE; i++) {
+            if (lruTable_.table[i].node != nullptr && lruTable_.table[i].data.fileId == f) {
+                lruList_.remove(lruTable_.table[i].node);
+                lruTable_.popByKey(i);
+            }
+        }
     }
 
     char *PageFS::loadPage(int fileId, int pageNum) {
@@ -123,8 +131,7 @@ namespace pagefs {
             return p.data;
         } else {
 //            Debug::info("found item");
-            lruList_.remove(t->node);
-            t->node = lruList_.push_back(t);
+            lruList_.move_back(t->node);
             return t->data.data;
         }
     }
@@ -134,14 +141,14 @@ namespace pagefs {
             LRUHashItem *t = lruTable_.get(fileId, pageNum);
             writeBack(t->data);
             t->data.dirty = 0;
-            lruList_.remove(t->node);
-            t->node = lruList_.push_back(t);
+            lruList_.move_back(t->node);
         } else {
             for (int i = 0; i < MAX_BUFFER_SIZE; i++) {
                 LRUHashItem &t = lruTable_.table[i];
-                if (t.data.fileId == fileId) {
+                if (t.node != nullptr && t.data.fileId == fileId) {
                     writeBack(t.data);
                     t.data.dirty = 0;
+                    lruList_.move_back(t.node);
                 }
             }
         }
@@ -200,6 +207,7 @@ namespace pagefs {
     /* LRU hash */
 
     LRUHash::LRUHash() : total(0) {
+        memset(table, 0, sizeof(table));
         for (int i = 0; i < MAX_BUFFER_SIZE; i++) {
             table[i].node = nullptr;
         }
@@ -261,7 +269,6 @@ namespace pagefs {
         total -= 1;
         LRUHashItem res = table[i];
 //        Debug::info("start popping");
-        std::cout << i << std::endl;
         table[i].node = nullptr;
         do {
             j = (j + 1) & MAX_BUFFER_SIZE_M1;
@@ -285,7 +292,11 @@ namespace pagefs {
     }
 
     LRUList::~LRUList() {
-        // TODO release
+        while (head != nullptr) {
+            tail = head->next;
+            delete head;
+            head = tail;
+        }
     }
 
     LRUListNode *LRUList::push_head(LRUHashItem *p) {
@@ -300,6 +311,7 @@ namespace pagefs {
     }
 
     LRUListNode *LRUList::push_back(LRUHashItem *p) {
+//        std::cout << "[PUSHBACK]" << p->data.fileId << " " << p->data.pageNum << std::endl;
         LRUListNode *n = new LRUListNode;
         n->item = p;
         n->prev = tail;
@@ -310,8 +322,24 @@ namespace pagefs {
         return tail;
     }
 
+    void LRUList::move_back(LRUListNode *p) {
+        if (p == nullptr) return;
+        if (p == tail) return;
+        LRUListNode *q = p->prev, *r = p->next;
+        if (q != nullptr) q->next = r;
+        if (r != nullptr) r->prev = q;
+        if (tail != nullptr) {
+            tail->next = p;
+            p->prev = tail;
+        }
+        tail = p;
+        p->next = nullptr;
+    }
+
     LRUHashItem *LRUList::remove(LRUListNode *p) {
+//        std::cout << "[REMOVE] try" << std::endl;
         if (p == nullptr) return nullptr;
+//        std::cout << "[REMOVE]" << p->item->data.fileId << " " << p->item->data.pageNum << std::endl;
         if (p == head) head = p->next;
         if (p == tail) tail = p->prev;
         LRUHashItem *res = p->item;

@@ -44,12 +44,14 @@ namespace pagefs {
     struct LRUListNode {
         LRUListNode *next, *prev;
         LRUHashItem *item;
+        LRUListNode(): next(nullptr), prev(nullptr), item(nullptr) {}
     };
 
     struct LRUHashItem {
         BufferPage data;
         LRUListNode *node;  // nullptr means unused
         int hashValue;
+        LRUHashItem(): node(nullptr) {}
     };
 
     struct LRUHash {
@@ -77,6 +79,7 @@ namespace pagefs {
 
         LRUListNode *push_head(LRUHashItem *p);
         LRUListNode *push_back(LRUHashItem *p);
+        void move_back(LRUListNode *p);
         inline LRUHashItem *pop_head() { return remove(head); }
         inline LRUHashItem *pop_back() { return remove(tail); }
         LRUHashItem *remove(LRUListNode *p);

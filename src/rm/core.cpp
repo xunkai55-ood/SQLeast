@@ -25,10 +25,11 @@ namespace sqleast {
             if (infoPtr->slotPerPage <= 0)
                 throw RecordTooLargeException();
 
+            std::cout << "..." << std::endl;
             fs.markDirty(fid, 0);
             fs.forcePage(fid, 0);
             fs.unpinPage(fid, 0);
-            fs.closeFile(fid);
+            std::cout << "!!!" << std::endl;
         }
 
         FileHandle RecordManager::openFile(const char *fileName) {

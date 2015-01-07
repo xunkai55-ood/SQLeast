@@ -107,9 +107,9 @@ void interactiveTest() {
 }
 
 int main() {
-//    testBuffer();
+    testBuffer();
 //    testSingleIO2();
 //    testSingleIO3();
-    interactiveTest();
+//    interactiveTest();
     return 0;
 }

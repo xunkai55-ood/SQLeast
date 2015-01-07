@@ -41,6 +41,8 @@ namespace sqleast {
 
             void printIndex();
 
+            static void createIndex(const char *indexName);
+
         private:
             rm::FileHandle handle_;
             RID hot_;
