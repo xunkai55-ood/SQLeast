@@ -15,7 +15,7 @@ namespace sqleast {
             void getRec(RID rid, Record &r);
             void insertRec(Record &r);
             RID declareRec();
-            void updateRec(const Record &r);
+            void updateRec(Record &r);
             void deleteRec(const Record &r);
             void deleteRec(RID rid);
             void forcePages();
