@@ -7,3 +7,6 @@ target_link_libraries(testpagefs pagefs)
 
 add_executable(testrm testrm.cpp)
 target_link_libraries(testrm pagefs sqleast-rm)
+
+add_executable(testix testix.cpp)
+target_link_libraries(testix pagefs sqleast-rm sqleast-ix)
