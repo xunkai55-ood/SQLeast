@@ -39,6 +39,8 @@ namespace sqleast {
             RID searchEntry(int key);
             bool removeEntry(int key);
 
+            void printIndex();
+
         private:
             rm::FileHandle handle_;
             RID hot_;
@@ -55,11 +57,11 @@ namespace sqleast {
             void incIndexSize();
             void decIndexSize();
             void commitIndexInfo();
-
-            // TODO yy part
             void getRoot(Node &node);
             void solveOverFlow(RID rid);
             void solveUnderFlow(RID rid);
+
+            void printNode(RID rid);
         };
     }
 }
