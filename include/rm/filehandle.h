@@ -13,11 +13,13 @@ namespace sqleast {
             ~FileHandle();
 
             Record getRec(RID rid);
+            RID allocateRec();
             RID insertRec(char *rData);
             RID updateRec(RID rid, char *rData);
             void deleteRec(RID rid);
             void forcePages();
             inline FileInfo getInfo() { return info_; }
+            inline char *getFileInfo() { return fs_.loadPage(fid_, 0); }
 
         private:
             FileId fid_;

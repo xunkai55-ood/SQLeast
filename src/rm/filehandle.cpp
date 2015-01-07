@@ -12,7 +12,7 @@ namespace sqleast {
         }
 
         FileHandle::~FileHandle() {
-
+            forcePages();
         }
 
         Record FileHandle::getRec(RID rid) {
@@ -26,13 +26,14 @@ namespace sqleast {
             char *pData = fs_.loadPage(fid_, rid.pageNum);
             pData = moveToRec(pData);
             pData += rid.slotNum * info_.recordSize;
-            memcpy(pData, rData, (size_t)info_.recordSize);
+            if (rData != nullptr)
+                memcpy(pData, rData, (size_t)(info_.recordSize) - sizeof(int));
             *(unsigned int *)pData |= REC_ALIVE;
             commitPage(rid.pageNum);
             return RID(rid.pageNum, rid.slotNum);
         }
 
-        RID FileHandle::insertRec(char *rData) {
+        RID FileHandle::allocateRec() {
             int pageNum = info_.firstEmptyPage;
             int slotNum = 0;
             while (true) {
@@ -75,8 +76,13 @@ namespace sqleast {
                 }
                 if (pageNum > 0) break;
             }
-            updateRec(RID(pageNum, slotNum), rData);
             return RID(pageNum, slotNum);
+        }
+
+        RID FileHandle::insertRec(char *rData) {
+            RID rid = allocateRec();
+            updateRec(rid, rData);
+            return rid;
         }
 
         void FileHandle::deleteRec(RID rid) {
@@ -114,6 +120,10 @@ namespace sqleast {
             info_.totalPageNum += 1;
             commitInfo();
             return info_.totalPageNum - 1;
+        }
+
+        void FileHandle::forcePages() {
+            fs_.forcePage(fid_, pagefs::ALL_PAGES);
         }
 
     }

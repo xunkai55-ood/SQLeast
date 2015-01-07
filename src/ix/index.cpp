@@ -1,6 +1,5 @@
-#include <tclDecls.h>
-#include <tkDecls.h>
 #include "ix/index.h"
+#include "rm/filehandle.h
 
 namespace sqleast {
     namespace ix {
@@ -60,6 +59,73 @@ namespace sqleast {
                 n[i] = n[i+1];
             return true;
         }
+
+        /* index */
+
+        /*
+        Index::Index(const char *indexName) {
+            try {
+                rm::RecordManager::createFile(indexName, sizeof(Node), false);
+            } catch (pagefs::FileExistsException) {
+                //
+            }
+            handle_ = rm::RecordManager::openFile(indexName);
+            hot_ = RID(-1, -1);
+            char *p = handle_.getFileInfo();
+            p += sizeof(rm::FileHandle);
+            indexInfo_ = *(IndexInfo *)p;
+        }
+
+        Index::~Index() {
+            handle_.
+        }
+
+        void Index::commitIndexInfo() {
+            char *p = handle_.getFileInfo();
+            p += sizeof(rm::FileInfo);
+            *(IndexInfo *)p = indexInfo_;
+        }
+
+        RID Index::getRootRID() {
+            return RID(indexInfo_.rootPageNum, indexInfo_.rootSlotNum);
+        }
+
+        void Index::setRoot(RID rid) {
+            indexInfo_.rootPageNum = rid.pageNum;
+            indexInfo_.rootSlotNum = rid.slotNum;
+            commitIndexInfo();
+        }
+
+        Node* Index::getNode(RID rid) {
+            Record r = handle_.getRec(rid);
+            return (Node*)(r.getData());
+        }
+
+        RID Index::allocateNode() {
+            RID r = handle_.insertRec(nullptr);
+            return r;
+        }
+
+        RID Index::releaseNode(RID rid) {
+            handle_.deleteRec(rid);
+            return rid;
+        }
+
+        void Index::forcePages() {
+            handle_.forcePages();
+        }
+
+        int Index::getIndexSize() {
+            return indexInfo_.indexSize;
+        }
+
+        void Index::incIndexSize() {
+            indexInfo_.indexSize++;
+        }
+
+        void Index::decIndexSize() {
+            indexInfo_.indexSize--;
+        }*/
 
         RID Index::searchEntry(int key) {
             hot_ = getRootRID();

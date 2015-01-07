@@ -130,11 +130,21 @@ namespace pagefs {
     }
 
     void PageFS::forcePage(int fileId, int pageNum) {
-        LRUHashItem *t = lruTable_.get(fileId, pageNum);
-        writeBack(t->data);
-        t->data.dirty = 0;
-        lruList_.remove(t->node);
-        t->node = lruList_.push_back(t);
+        if (pageNum != ALL_PAGES) {
+            LRUHashItem *t = lruTable_.get(fileId, pageNum);
+            writeBack(t->data);
+            t->data.dirty = 0;
+            lruList_.remove(t->node);
+            t->node = lruList_.push_back(t);
+        } else {
+            for (int i = 0; i < MAX_BUFFER_SIZE; i++) {
+                LRUHashItem &t = lruTable_.table[i];
+                if (t.data.fileId == fileId) {
+                    writeBack(t.data);
+                    t.data.dirty = 0;
+                }
+            }
+        }
     }
 
     void PageFS::pinPage(int fileId, int pageNum) {

@@ -17,6 +17,8 @@ namespace pagefs {
     const int MAX_BUFFER_SIZE(4); // has to be 2^n for the performance concern
     const int MAX_BUFFER_SIZE_M1 = MAX_BUFFER_SIZE - 1;
 
+    const int ALL_PAGES(-1);
+
     // file system
     const int FILE_NAME_MAX_LEN(40);
 

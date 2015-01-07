@@ -47,7 +47,6 @@ void testSingleIO3() {
     for (int i = 0; i < 20; i++) {
         cout << i << endl;
         char *c = fs.loadPage(f, i);
-        fs.pinPage(f, i);
         sprintf(msg, "Page No.%d", i);
         cout << "loaded!" << endl;
         assert(c != nullptr);
@@ -66,11 +65,8 @@ void testBuffer() {
     cout << "buffer test begin!" << endl;
     pagefs::FileId f = fs.openFile("test.db");
     char *a1 = fs.loadPage(f, 0);
-    fs.pinPage(f, 0);
     char *a2 = fs.loadPage(f, 1);
-    fs.pinPage(f, 1);
     char *a3 = fs.loadPage(f, 2);
-    fs.pinPage(f, 2);
     char *a4 = fs.loadPage(f, 3);
 }
 
