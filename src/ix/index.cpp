@@ -95,7 +95,15 @@ namespace sqleast {
 
         void Index::getNode(RID rid, Node &node) {
             char *pData = handle_.getRecDataPtr(rid) + FLAG_SIZE; // move flag
-            node = *(Node*)pData;
+            memcpy(&node, pData, sizeof(node));
+            handle_.releaseRecDataPtr(rid);
+        }
+
+        void Index::commitNode(RID rid, const Node &node) {
+            char *pData = handle_.getRecDataPtr(rid) + FLAG_SIZE;
+            memcpy(pData, &node, sizeof(node));
+            handle_.commitPage(rid.pageNum);
+            handle_.releaseRecDataPtr(rid);
         }
 
         RID Index::allocateNode() {

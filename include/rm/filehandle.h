@@ -22,8 +22,10 @@ namespace sqleast {
             inline FileInfo getInfo() { return info_; }
             inline char *getFileInfo() { return fs_.loadPage(fid_, 0); }
 
+            /* for performance concern, 3 dangerous quick callable */
             char *getRecDataPtr(RID rid);
-            void releaseRecDataPtr(RID rid);
+            inline void releaseRecDataPtr(RID rid) { unpinPage(rid.pageNum); }
+            inline void commitPage(int pageNum) { fs_.markDirty(fid_, pageNum); }
 
         private:
             FileId fid_;
@@ -34,10 +36,6 @@ namespace sqleast {
                 char *pData = fs_.loadPage(fid_, 0);
                 memcpy(pData, &info_, sizeof(info_));
                 fs_.markDirty(fid_, 0);
-            }
-
-            inline void commitPage(int pageNum) {
-                fs_.markDirty(fid_, pageNum);
             }
 
             inline void unpinPage(int pageNum) {
