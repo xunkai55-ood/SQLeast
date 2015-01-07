@@ -15,7 +15,7 @@ namespace sqleast {
                     CompOp compOp, void *value);
             ~FileScan();
 
-            Record next();
+            Record &next();
 
         private:
             int pageNum_, slotNum_;
@@ -25,6 +25,7 @@ namespace sqleast {
             void *value_;
             FileHandle handle_;
             FileInfo info_;
+            Record c_;  // order matters (for initialization)
         };
 
     }

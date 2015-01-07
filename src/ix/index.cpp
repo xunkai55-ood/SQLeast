@@ -61,14 +61,14 @@ namespace sqleast {
 
         /* index */
 
-        /*
-        Index::Index(const char *indexName) {
+        Index::Index(const char *indexName):
+                handle_(rm::RecordManager::openFile(indexName))
+        {
             try {
                 rm::RecordManager::createFile(indexName, sizeof(Node), false);
             } catch (pagefs::FileExistsException) {
                 //
             }
-            handle_ = rm::RecordManager::openFile(indexName);
             hot_ = RID(-1, -1);
             char *p = handle_.getFileInfo();
             p += sizeof(rm::FileHandle);
@@ -76,7 +76,6 @@ namespace sqleast {
         }
 
         Index::~Index() {
-            handle_.
         }
 
         void Index::commitIndexInfo() {
@@ -95,13 +94,21 @@ namespace sqleast {
             commitIndexInfo();
         }
 
-        Node* Index::getNode(RID rid) {
-            Record r = handle_.getRec(rid);
-            return (Node*)(r.getData());
+        void Index::getNode(RID rid, Node &node) {
+            char *pData = handle_.getRecDataPtr(rid) + FLAG_SIZE; // move flag
+            memcpy(&node, pData, sizeof(node));
+            handle_.releaseRecDataPtr(rid);
+        }
+
+        void Index::commitNode(RID rid, const Node &node) {
+            char *pData = handle_.getRecDataPtr(rid) + FLAG_SIZE;
+            memcpy(pData, &node, sizeof(node));
+            handle_.commitPage(rid.pageNum);
+            handle_.releaseRecDataPtr(rid);
         }
 
         RID Index::allocateNode() {
-            RID r = handle_.insertRec(nullptr);
+            RID r = handle_.declareRec();
             return r;
         }
 
@@ -124,7 +131,7 @@ namespace sqleast {
 
         void Index::decIndexSize() {
             indexInfo_.indexSize--;
-        }*/
+        }
 
         RID Index::searchEntry(int key) {
             hot_ = getRootRID();

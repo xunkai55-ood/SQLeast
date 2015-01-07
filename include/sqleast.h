@@ -26,6 +26,8 @@ namespace sqleast {
      * where INFO is a flag unsigned int.
      */
 
+    const size_t FLAG_SIZE = sizeof(int);
+
     struct RID {
         int pageNum;
         int slotNum;
@@ -62,7 +64,7 @@ namespace sqleast {
             return *(int*)rData;
         }
         inline char *getData() {
-            return rData + sizeof(int);
+            return rData + FLAG_SIZE;
         }
     };
 

@@ -47,7 +47,7 @@ namespace sqleast {
             RID getRootRID();
             void setRoot(RID rid);
             void getNode(RID rid, Node &node);  // client firstly create a node instance, then pass it to the "get node" method
-            void commitNode(RID rid, Node &node);  // after a part of "write" operation, call this function to write to disk
+            void commitNode(RID rid, const Node &node);  // after a part of "write" operation, call this function to write to disk
             RID allocateNode();
             RID releaseNode(RID rid);
             void forcePages();
