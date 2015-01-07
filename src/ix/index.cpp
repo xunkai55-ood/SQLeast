@@ -65,20 +65,6 @@ namespace sqleast {
         {
             try {
                 rm::RecordManager::createFile(indexName, sizeof(Node), false);
-                char *p = handle_.getFileInfo();
-                p += sizeof(rm::FileHandle);
-                RID rid = allocateNode();
-                indexInfo_.indexSize = 0;
-                indexInfo_.rootPageNum = rid.pageNum;
-                indexInfo_.rootSlotNum = rid.slotNum;
-                Node n;
-                getNode(rid, n);
-                n.isLeaf = true;
-                n.parent = RID(-1, -1);
-                n.size = 0;
-                memset(n.n, 0, sizeof(n.n));
-                memset(n.k, 0, sizeof(n.k));
-                commitNode(rid, n);
             } catch (pagefs::FileExistsException) {
                 //
             }
@@ -449,5 +435,29 @@ namespace sqleast {
             getNode(getRootRID(), node);
         }
 
+        void Index::printIndex() {
+            printNode(getRootRID());
+        }
+
+        void Index::printNode(RID rid){
+            Node n;
+            getNode(rid, n);
+            if(n.isLeaf){
+                for(int i = 0 ; i < n.size ; i ++)
+                {
+                    std::cout << "(" << n.n[i].pageNum << "," << n.n[i].slotNum << ")" << " " << n.k[i];
+                }
+                std::cout << std::endl;
+            }
+            else{
+                for(int i = 0 ; i < n.size ; i ++)
+                {
+                    std::cout << "(" << n.n[i].pageNum << "," << n.n[i].slotNum << ")" << " " << n.k[i];
+                }
+                std::cout << "(" << n.n[n.size].pageNum << "," << n.n[n.size].slotNum << ")" << std::endl;
+                for(int i = 0 ; i <= n.size ; i ++)
+                    printNode(n.n[i]);
+            }
+        }
     }
 }
