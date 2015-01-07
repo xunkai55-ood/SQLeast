@@ -14,11 +14,16 @@ namespace sqleast {
 
             void getRec(RID rid, Record &r);
             void insertRec(Record &r);
+            RID declareRec();
             void updateRec(const Record &r);
             void deleteRec(const Record &r);
+            void deleteRec(RID rid);
             void forcePages();
             inline FileInfo getInfo() { return info_; }
             inline char *getFileInfo() { return fs_.loadPage(fid_, 0); }
+
+            char *getRecDataPtr(RID rid);
+            void releaseRecDataPtr(RID rid);
 
         private:
             FileId fid_;
@@ -30,8 +35,13 @@ namespace sqleast {
                 memcpy(pData, &info_, sizeof(info_));
                 fs_.markDirty(fid_, 0);
             }
+
             inline void commitPage(int pageNum) {
                 fs_.markDirty(fid_, pageNum);
+            }
+
+            inline void unpinPage(int pageNum) {
+                fs_.unpinPage(fid_, pageNum);
             }
 
             inline PageHeader getPageHeader(char *pData) {

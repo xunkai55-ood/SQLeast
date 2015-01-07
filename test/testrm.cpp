@@ -26,7 +26,7 @@ void testDestroyFile() {
 
 void testStoreRecords() {
     int flagLen = sizeof(int);
-    int dataLen = 28;
+    int dataLen = 32;
     int bitmapLen = 0;
     int rLen = flagLen + dataLen + bitmapLen;
     RecordManager::createFile("rmtest.db", rLen, true);
@@ -34,7 +34,7 @@ void testStoreRecords() {
     Record r(rLen);
     for (int i = 0; i < 20; i++) {
         memset(r.rData, 0, r.size);
-        sprintf(r.rData + sizeof(int), "fuck you no %d", i);
+        sprintf(r.rData + sizeof(int), "fuck you baby no %d", i);
         f.insertRec(r);
     }
 }

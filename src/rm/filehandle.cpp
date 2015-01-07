@@ -14,6 +14,15 @@ namespace sqleast {
 
         FileHandle::~FileHandle() {
             forcePages();
+            fs_.markDirty(fid_, 0);
+            fs_.unpinPage(fid_, 0); // DANGEROUS
+        }
+
+        char *FileHandle::getRecDataPtr(RID rid) {
+            char *pData = fs_.loadPage(fid_, rid.pageNum);
+            pData = moveToRec(pData);
+            pData += rid.slotNum * info_.recordSize;
+            return pData;
         }
 
         void FileHandle::getRec(RID rid, Record &r) {
@@ -24,6 +33,7 @@ namespace sqleast {
             pData += rid.slotNum * info_.recordSize;
             memcpy(r.rData, pData, (size_t)r.size);
             r.rid = rid;
+            unpinPage(rid.pageNum);
         }
 
         void FileHandle::updateRec(const Record &r) {
@@ -31,11 +41,14 @@ namespace sqleast {
                 throw InvalidRecordException();
             if (r.size != info_.recordSize)
                 throw RecordSizeError();
-            char *pData = fs_.loadPage(fid_, r.rid.pageNum);
+            int pNum = r.rid.pageNum;
+            char *pData = fs_.loadPage(fid_, pNum);
             pData = moveToRec(pData);
             pData += r.rid.slotNum * info_.recordSize;
             memcpy(pData, r.rData, (size_t)(info_.recordSize));
-            commitPage(r.rid.pageNum);
+            *(int*)pData |= REC_ALIVE;
+            commitPage(pNum);
+            unpinPage(pNum);
         }
 
         RID FileHandle::allocateRec() {
@@ -60,6 +73,7 @@ namespace sqleast {
                                     char *next = fs_.loadPage(fid_, pHeader.nextPage);
                                     PageHeader nextPH = getPageHeader(next);
                                     writePageHeader(next, nextPH);
+                                    unpinPage(pHeader.nextPage);
                                 }
                                 if (pageNum == info_.firstEmptyPage) {
                                     info_.firstEmptyPage = pHeader.nextPage;
@@ -80,6 +94,7 @@ namespace sqleast {
                     }
                 }
                 if (pageNum > 0) break;
+                unpinPage(pageNum);
             }
             return RID(pageNum, slotNum);
         }
@@ -89,8 +104,23 @@ namespace sqleast {
             updateRec(r);
         }
 
+        RID FileHandle::declareRec() {
+            RID rid = allocateRec();
+            int pNum = rid.pageNum;
+            char *pData = fs_.loadPage(fid_, pNum);
+            pData = moveToRec(pData);
+            pData += rid.slotNum * info_.recordSize;
+            *(int*)pData |= REC_ALIVE;
+            commitPage(pNum);
+            unpinPage(pNum);
+            return rid;
+        }
+
         void FileHandle::deleteRec(const Record &r) {
-            RID rid = r.rid;
+            deleteRec(r.rid);
+        }
+
+        void FileHandle::deleteRec(RID rid) {
             char *pData = fs_.loadPage(fid_, rid.pageNum);
             PageHeader pHeader = getPageHeader(pData);
             if (pHeader.emptySlot == 0) {
