@@ -28,10 +28,10 @@ namespace sqleast {
                     if (compOp_ == NO_OP) {
                         break;
                     } else if (compOp_ == IS_NULL_OP) {
-                        if (*(c_.getData() + nullBitOffset_) & nullBitMask_)
+                        if ((*(c_.getData() + nullBitOffset_)) & nullBitMask_)
                             break;
                     } else if (compOp_ == NOT_NULL_OP) {
-                        if (*(c_.getData() + nullBitOffset_) & nullBitMask_ == 0)
+                        if (((*(c_.getData() + nullBitOffset_)) & nullBitMask_) == 0)
                             break;
                     } else if (attrType_ == INT) {
                         int attr = *(c_.getData() + attrOffset_);

@@ -14,8 +14,6 @@ namespace sqleast {
 
         FileHandle::~FileHandle() {
             forcePages();
-            fs_.markDirty(fid_, 0);
-            fs_.unpinPage(fid_, 0); // DANGEROUS
         }
 
         char *FileHandle::getRecDataPtr(RID rid) {
@@ -36,7 +34,7 @@ namespace sqleast {
             unpinPage(rid.pageNum);
         }
 
-        void FileHandle::updateRec(const Record &r) {
+        void FileHandle::updateRec(Record &r) {
             if (r.rid.pageNum <= 0 || r.rid.slotNum < 0)
                 throw InvalidRecordException();
             if (r.size != info_.recordSize)
@@ -45,8 +43,8 @@ namespace sqleast {
             char *pData = fs_.loadPage(fid_, pNum);
             pData = moveToRec(pData);
             pData += r.rid.slotNum * info_.recordSize;
-            memcpy(pData, r.rData, (size_t)(info_.recordSize));
             *(int*)pData |= REC_ALIVE;
+            memcpy(pData, r.rData, (size_t)(info_.recordSize));
             commitPage(pNum);
             unpinPage(pNum);
         }
