@@ -1,4 +1,3 @@
-#include <AppKit/AppKit.h>
 #include "ix/index.h"
 #include "rm/filehandle.h"
 
@@ -66,7 +65,20 @@ namespace sqleast {
         {
             try {
                 rm::RecordManager::createFile(indexName, sizeof(Node), false);
-                
+                char *p = handle_.getFileInfo();
+                p += sizeof(rm::FileHandle);
+                RID rid = allocateNode();
+                indexInfo_.indexSize = 0;
+                indexInfo_.rootPageNum = rid.pageNum;
+                indexInfo_.rootSlotNum = rid.slotNum;
+                Node n;
+                getNode(rid, n);
+                n.isLeaf = true;
+                n.parent = RID(-1, -1);
+                n.size = 0;
+                memset(n.n, 0, sizeof(n.n));
+                memset(n.k, 0, sizeof(n.k));
+                commitNode(rid, n);
             } catch (pagefs::FileExistsException) {
                 //
             }
