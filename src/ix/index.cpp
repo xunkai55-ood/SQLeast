@@ -65,6 +65,7 @@ namespace sqleast {
         {
             try {
                 rm::RecordManager::createFile(indexName, sizeof(Node), false);
+                
             } catch (pagefs::FileExistsException) {
                 //
             }
