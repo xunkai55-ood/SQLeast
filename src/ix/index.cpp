@@ -1,3 +1,4 @@
+#include <AppKit/AppKit.h>
 #include "ix/index.h"
 #include "rm/filehandle.h"
 
@@ -163,6 +164,7 @@ namespace sqleast {
             getNode(hot_, leaf);
             leaf.insertK(key, posi);
             leaf.insertN(value, posi);
+            commitNode(hot_, leaf);
             incIndexSize();
             solveOverFlow(hot_);
             forcePages();
@@ -178,6 +180,7 @@ namespace sqleast {
             int rank = leaf.getPosition(key);
             leaf.removeK(rank);
             leaf.removeN(rank);
+            commitNode(hot_, leaf);
             decIndexSize();
             solveUnderFlow(hot_);
             forcePages();
@@ -216,11 +219,14 @@ namespace sqleast {
                 p.insertK(v.k[half], rank);
                 p.insertN(nid, rank + 1);
                 n.parent = pid;
+                commitNode(rid, v);
+                commitNode(nid, n);
+                commitNode(pid, p);
                 solveOverFlow(pid);
             }
             else
             {
-                if (B_PLUS_TREE_BRANCH >= v.size) return;
+                if (B_PLUS_TREE_BRANCH + 1 >= v.size + 1) return;
                 int half = (B_PLUS_TREE_BRANCH + 1) / 2;
                 RID nid = allocateNode();
                 Node n;
@@ -251,11 +257,180 @@ namespace sqleast {
                 p.insertN(nid, rank + 1);
                 v.removeK(half);
                 n.parent = pid;
+                commitNode(rid, v);
+                commitNode(nid, n);
+                commitNode(pid, p);
                 solveOverFlow(pid);
             }
         }
 
         void Index::solveUnderFlow(RID rid) {
+            Node v;
+            getNode(rid, v);
+            if(v.isLeaf){
+                if((B_PLUS_TREE_BRANCH + 2) / 2 <= v.size) return;
+                if(getRootRID() == rid) {
+                    return;
+                }
+                RID pid = v.parent;
+                Node p;
+                getNode(pid, p);
+                int r = 0;
+                while(!(p.n[r] == rid)) r++;
+                if(r > 0){
+                    Node ls;
+                    getNode(p.n[r-1], ls);
+                    if((B_PLUS_TREE_BRANCH + 2) / 2 < ls.size){
+                        p.k[r-1] = ls.k[ls.size - 1];
+                        v.insertN(ls.n[ls.size - 1], 0);
+                        ls.removeN(ls.size - 1);
+                        v.insertK(ls.k[ls.size - 1], 0);
+                        ls.removeK(ls.size - 1);
+                        commitNode(p.n[r-1], ls);
+                        commitNode(rid, v);
+                        commitNode(pid, p);
+                        return;
+                    }
+                }
+                if(r < p.size){
+                    Node rs;
+                    getNode(p.n[r+1], rs);
+                    if((B_PLUS_TREE_BRANCH + 2) / 2 < rs.size){
+                        v.insertN(rs.n[0], v.size);
+                        rs.removeN(0);
+                        v.insertK(rs.k[0], v.size);
+                        rs.removeK(0);
+                        p.k[r] = rs.k[0];
+                        commitNode(p.n[r+1], rs);
+                        commitNode(rid, v);
+                        commitNode(pid, p);
+                        return;
+                    }
+                }
+                if(r > 0){
+                    Node ls;
+                    getNode(p.n[r-1], ls);
+                    int len = ls.size;
+                    for(int j = len - 1 ; j >= 0 ; j --)
+                    {
+                        v.insertN(ls.n[j], 0);
+                        ls.removeN(j);
+                        v.insertK(ls.k[j], 0);
+                        ls.removeK(j);
+                    }
+                    releaseNode(p.n[r-1]);
+                    p.removeN(r-1);
+                    p.removeK(r-1);
+                    commitNode(rid, v);
+                    commitNode(pid, p);
+                }
+                else
+                {
+                    Node rs;
+                    getNode(p.n[r+1], rs);
+                    int len = rs.size;
+                    int nlen = v.size;
+                    for(int j = len - 1 ; j >= 0 ; j --)
+                    {
+                        v.insertN(rs.n[j], nlen);
+                        rs.removeN(j);
+                        v.insertK(rs.k[j], nlen);
+                        rs.removeK(j);
+                    }
+                    releaseNode(p.n[r+1]);
+                    p.removeN(r+1);
+                    p.removeK(r);
+                    commitNode(rid, v);
+                    commitNode(pid, p);
+                }
+                solveUnderFlow(pid);
+                return;
+            }
+            else{
+                if((B_PLUS_TREE_BRANCH + 2) / 2 <= v.size) return;
+                if(getRootRID() == rid) {
+                    return;
+                }
+                RID pid = v.parent;
+                Node p;
+                getNode(pid, p);
+                int r = 0;
+                while(!(p.n[r] == rid)) r++;
+                if(r > 0){
+                    Node ls;
+                    getNode(p.n[r-1], ls);
+                    if((B_PLUS_TREE_BRANCH + 2) / 2 < ls.size){
+                        v.insertN(ls.n[ls.size], 0);
+                        ls.removeN(ls.size);
+                        v.insertK(p.k[r-1], 0);
+                        p.k[r-1] = ls.k[ls.size - 1];
+                        ls.removeK(ls.size - 1);
+                        commitNode(p.n[r-1], ls);
+                        commitNode(rid, v);
+                        commitNode(pid, p);
+                        return;
+                    }
+                }
+                if(r < p.size){
+                    Node rs;
+                    getNode(p.n[r+1], rs);
+                    if((B_PLUS_TREE_BRANCH + 2) / 2 < rs.size){
+                        v.insertN(rs.n[0], v.size + 1);
+                        rs.removeN(0);
+                        v.insertK(p.k[r], v.size);
+                        p.k[r] = rs.k[0];
+                        rs.removeK(0);
+                        commitNode(p.n[r+1], rs);
+                        commitNode(rid, v);
+                        commitNode(pid, p);
+                        return;
+                    }
+                }
+                if(r > 0){
+                    Node ls;
+                    getNode(p.n[r-1], ls);
+                    int len = ls.size;
+                    v.insertK(p.k[r-1], 0);
+                    v.insertN(ls.n[len], 0);
+                    v.removeN(len);
+                    for(int j = len - 1 ; j >= 0 ; j --)
+                    {
+                        v.insertN(ls.n[j], 0);
+                        ls.removeN(j);
+                        v.insertK(ls.k[j], 0);
+                        ls.removeK(j);
+                    }
+                    releaseNode(p.n[r-1]);
+                    p.removeN(r-1);
+                    p.removeK(r-1);
+                    commitNode(rid, v);
+                    commitNode(pid, p);
+                }
+                else
+                {
+                    Node rs;
+                    getNode(p.n[r+1], rs);
+                    int len = rs.size;
+                    int nlen = v.size;
+                    v.insertK(p.k[r], nlen);
+                    for(int j = 0 ; j < len ; j ++)
+                    {
+                        v.insertN(rs.n[0], nlen + 1 + j);
+                        rs.removeN(0);
+                        v.insertK(rs.k[0], nlen + 1 + j);
+                        rs.removeK(0);
+                    }
+                    v.insertN(rs.n[0], nlen + 1 + len);
+                    rs.removeN(0);
+                    releaseNode(p.n[r+1]);
+                    p.removeN(r+1);
+                    p.removeK(r);
+                    commitNode(rid, v);
+                    commitNode(pid, p);
+                }
+                solveUnderFlow(pid);
+                return;
+            }
         }
 
         void Index::getRoot(Node &node) {
