@@ -1,6 +1,5 @@
-#include <AppKit/AppKit.h>
 #include "ix/index.h"
-#include "rm/filehandle.h"
+#include "rm/filehandle.h
 
 namespace sqleast {
     namespace ix {
