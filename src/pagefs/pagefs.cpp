@@ -4,7 +4,7 @@
 #include <cstdio>
 #include <assert.h>
 
-#define PAGEFS_VERBOSE
+//#define PAGEFS_VERBOSE
 
 namespace {
     #ifdef PAGEFS_VERBOSE

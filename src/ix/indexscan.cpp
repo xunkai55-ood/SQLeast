@@ -11,15 +11,19 @@ namespace sqleast{
                     toStart1();
                     break;
                 case EQ_OP:
-                    toStart1();
+                    toStart2();
                     break;
                 case LT_OP:
+                    toStart2();
                     break;
                 case GT_OP:
+                    toStart2();
                     break;
                 case LE_OP:
+                    toStart2();
                     break;
                 case GE_OP:
+                    toStart2();
                     break;
                 case NE_OP:
                     toStart1();
@@ -40,7 +44,7 @@ namespace sqleast{
                 case NO_OP:
                     res = NoSearch();
                     break;
-                /*case EQ_OP:
+                case EQ_OP:
                     res = EqSearch();
                     break;
                 case LT_OP:
@@ -57,7 +61,7 @@ namespace sqleast{
                     break;
                 case NE_OP:
                     res = NeSearch();
-                    break;*/
+                    break;
                 default:
                     break;
             }
@@ -75,6 +79,21 @@ namespace sqleast{
                 position.push_back(0);
             }
             position.push_back(0);
+        }
+
+        void IndexScan::toStart2(){
+            current = index_.getRootRID();
+            Node root;
+            index_.getNode(current, root);
+            if(root.size == 0)  return;
+            while(!root.isLeaf){
+                int rank = root.getPosition(value_);
+                current = root.n[rank+1];
+                index_.getNode(current, root);
+                position.push_back(rank+1);
+            }
+            int r = root.getPosition(value_);
+            position.push_back(r);
         }
 
         bool IndexScan::toRight(){
@@ -112,6 +131,44 @@ namespace sqleast{
             return true;
         }
 
+        bool IndexScan::toLeft(){
+            int num = position.back();
+            Node n;
+            index_.getNode(current, n);
+            if(num > 0){
+                num --;
+                position[position.size()-1] = num;
+                return true;
+            }
+
+            if(current == index_.getRootRID()) return false;
+            current = n.parent;
+            index_.getNode(current, n);
+            position.pop_back();
+            num = position.back();
+            while(num == 0){
+                if(current == index_.getRootRID()) return false;
+                current = n.parent;
+                index_.getNode(current, n);
+                position.pop_back();
+                num = position.back();
+            }
+            if(num > 0){
+                num --;
+                position[position.size()-1] = num;
+            }
+            while(!n.isLeaf){
+                num = position.back();
+                current = n.n[num];
+                index_.getNode(current, n);
+                if(!n.isLeaf)
+                    position.push_back(n.size);
+                else
+                    position.push_back(n.size - 1);
+            }
+            return true;
+        }
+
         RID IndexScan::NoSearch(){
             if(position.size() == 0) return RID(-1,-1);
             int num = position.back();
@@ -122,15 +179,27 @@ namespace sqleast{
             return res;
         }
 
-        RID IndexScan::EqSearch(){
+        RID IndexScan::EqSearch() {
             if(position.size() == 0) return RID(-1,-1);
             int num = position.back();
             Node n;
             index_.getNode(current, n);
             RID res = n.n[num];
-            while(n.k[num] != value_){
+            if(n.k[num])
+                return res;
+            else
+                return RID(-1,-1);
+        }
+
+        RID IndexScan::LtSearch(){
+            if(position.size() == 0) return RID(-1,-1);
+            int num = position.back();
+            Node n;
+            index_.getNode(current, n);
+            RID res = n.n[num];
+            while(n.k[num] >= value_){
+                canDo = toLeft();
                 if(canDo) {
-                    toRight();
                     num = position.back();
                     index_.getNode(current, n);
                     res = n.n[num];
@@ -138,6 +207,87 @@ namespace sqleast{
                 else
                     return RID(-1,-1);
             }
+            canDo = toLeft();
+            return res;
+        }
+
+        RID IndexScan::GtSearch() {
+            if(position.size() == 0) return RID(-1,-1);
+            int num = position.back();
+            Node n;
+            index_.getNode(current, n);
+            RID res = n.n[num];
+            while(n.k[num] <= value_){
+                canDo = toRight();
+                if(canDo) {
+                    num = position.back();
+                    index_.getNode(current, n);
+                    res = n.n[num];
+                }
+                else
+                    return RID(-1,-1);
+            }
+            canDo = toRight();
+            return res;
+        }
+
+        RID IndexScan::LeSearch(){
+            if(position.size() == 0) return RID(-1,-1);
+            int num = position.back();
+            Node n;
+            index_.getNode(current, n);
+            RID res = n.n[num];
+            while(n.k[num] > value_){
+                canDo = toLeft();
+                if(canDo) {
+                    num = position.back();
+                    index_.getNode(current, n);
+                    res = n.n[num];
+                }
+                else
+                    return RID(-1,-1);
+            }
+            canDo = toLeft();
+            return res;
+        }
+
+        RID IndexScan::GeSearch() {
+            if(position.size() == 0) return RID(-1,-1);
+            int num = position.back();
+            Node n;
+            index_.getNode(current, n);
+            RID res = n.n[num];
+            while(n.k[num] < value_){
+                canDo = toRight();
+                if(canDo) {
+                    num = position.back();
+                    index_.getNode(current, n);
+                    res = n.n[num];
+                }
+                else
+                    return RID(-1,-1);
+            }
+            canDo = toRight();
+            return res;
+        }
+
+        RID IndexScan::NeSearch(){
+            if(position.size() == 0) return RID(-1,-1);
+            int num = position.back();
+            Node n;
+            index_.getNode(current, n);
+            RID res = n.n[num];
+            while(n.k[num] == value_){
+                canDo = toRight();
+                if(canDo) {
+                    num = position.back();
+                    index_.getNode(current, n);
+                    res = n.n[num];
+                }
+                else
+                    return RID(-1,-1);
+            }
+            canDo = toRight();
             return res;
         }
     }

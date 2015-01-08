@@ -66,14 +66,8 @@ int main()
     tree.removeEntry(3);
     tree.printIndex();
 
-    sqleast::ix::IndexScan is(tree, 7, sqleast::EQ_OP);
+    sqleast::ix::IndexScan is(tree, 9, sqleast::GE_OP);
     sqleast::RID r = is.next();
-    std::cout << r.pageNum << "!" << r.slotNum << std::endl;
-    r = is.next();
-    std::cout << r.pageNum << "!" << r.slotNum << std::endl;
-    r = is.next();
-    std::cout << r.pageNum << "!" << r.slotNum << std::endl;
-    r = is.next();
     std::cout << r.pageNum << "!" << r.slotNum << std::endl;
     r = is.next();
     std::cout << r.pageNum << "!" << r.slotNum << std::endl;
