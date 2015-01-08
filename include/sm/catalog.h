@@ -18,13 +18,6 @@ namespace sqleast {
             int indexNo;
         };
 
-        struct AttrInfo {
-            char *attrName;
-            AttrType attrType;
-            int attrLength;
-            int nullable;
-        };
-
         struct RelInfo {
             char relName[MAX_NAME_LENGTH + 1];
             int tupleLength;

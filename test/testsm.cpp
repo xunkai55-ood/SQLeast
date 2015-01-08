@@ -4,11 +4,11 @@
 int main() {
     sqleast::sm::SystemManager::destroyDB("testing");
     std::cout << sizeof(sqleast::sm::RelInfo) << std::endl;
-    std::cout << sizeof(sqleast::sm::AttrInfo) << std::endl;
+    std::cout << sizeof(sqleast::sm::DataAttrInfo) << std::endl;
     sqleast::sm::SystemManager::createDB("testing");
     sqleast::sm::SystemManager::useDB("testing");
 
-    sqleast::sm::AttrInfo attrs[3];
+    sqleast::AttrInfo attrs[3];
 
     attrs[0].attrName = new char[sqleast::MAX_NAME_LENGTH];
     memcpy(attrs[0].attrName, "id", sqleast::MAX_NAME_LENGTH);

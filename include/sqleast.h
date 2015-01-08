@@ -77,6 +77,14 @@ namespace sqleast {
         REC_ALIVE = 1
     };
 
+    const int MAX_ATTR_NUM = 100;
+
+    struct AttrInfo {
+        char *attrName;
+        AttrType attrType;
+        int attrLength;
+        int nullable;
+    };
 
 }
 

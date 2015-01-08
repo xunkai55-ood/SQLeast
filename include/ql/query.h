@@ -1,6 +1,8 @@
 #ifndef QL_QUERY_H
 #define QL_QUERY_H
 
+#include <sqleast.h>
+
 namespace sqleast {
 
     namespace ql {
@@ -20,6 +22,11 @@ namespace sqleast {
 
         struct SingleStringQuery: public StructuredQuery {
             char dbName[MAX_NAME_LEN + 1];
+        };
+
+        struct CreateTableQuery: public CreateTableQuery {
+            char dbName[MAX_NAME_LEN + 1];
+            AttrInfo attrs[MAX_ATTR_NUM];
         };
 
     }
