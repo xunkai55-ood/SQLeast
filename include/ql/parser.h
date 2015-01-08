@@ -2,6 +2,7 @@
 #define QL_PARSER_H
 
 #include "ql/query.h"
+#include <string>
 
 namespace sqleast {
     namespace ql {
@@ -9,7 +10,7 @@ namespace sqleast {
         class Parser {
 
         public:
-            StructuredQuery *parse(string input);
+            StructuredQuery *parse(std::string input);
 
         private:
             StructuredQuery *q_;
