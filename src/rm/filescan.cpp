@@ -10,7 +10,7 @@ namespace sqleast {
                 int nullBitOffset, int nullBitMask,
                 CompOp compOp, void *value) :
         handle_(handle), attrType_(attrType), attrLength_(attrLength), attrOffset_(attrOffset),
-        nullBitOffset_(nullBitOffset), nullBitMask_(nullBitMask), value_(value),
+        nullBitOffset_(nullBitOffset), nullBitMask_(nullBitMask), value_(value), compOp_(compOp),
         pageNum_(1), slotNum_(0), info_(handle.getInfo()), c_(info_.recordSize)
         {
         }
@@ -19,10 +19,12 @@ namespace sqleast {
         }
 
         Record &FileScan::next() {
-            if (pageNum_ == info_.totalPageNum) {
-                throw EOFException();
-            }
             do {
+                if (pageNum_ == info_.totalPageNum) {
+                    c_.rid.pageNum = -1;
+                    c_.rid.slotNum = -1;
+                    return c_;
+                }
                 handle_.getRec(RID(pageNum_, slotNum_), c_);
                 if (c_.getFlag() & REC_ALIVE) {
                     if (compOp_ == NO_OP) {
@@ -50,16 +52,11 @@ namespace sqleast {
                     } else if (attrType_ == STRING) {
                         char *attr = c_.getData() + attrOffset_;
                         char *value = (char *) value_;
-                        int i = 0;
-                        while (i < attrLength_ && (*attr == *value)) {
-                            i++;
-                            attr++;
-                            value++;
-                        }
-                        if (i == attrLength_) {
+                        int i = strncmp(attr, value, (size_t)attrLength_);
+                        if (i == 0) {
                             if (compOp_ == EQ_OP || compOp_ == LE_OP || compOp_ == GE_OP)
                                 break;
-                        } else if (*attr < *value) {
+                        } else if (i < 0) {
                             if (compOp_ == LT_OP || compOp_ == LE_OP || compOp_ == NE_OP)
                                 break;
                         } else {
@@ -67,6 +64,11 @@ namespace sqleast {
                                 break;
                         }
                     }
+                }
+                slotNum_ += 1;
+                if (slotNum_ == info_.slotPerPage) {
+                    slotNum_ = 0;
+                    pageNum_ += 1;
                 }
             } while (true);
             slotNum_ += 1;

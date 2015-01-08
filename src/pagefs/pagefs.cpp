@@ -66,7 +66,9 @@ namespace pagefs {
         for (int i = 0; i < entryCnt_; i++)
             if (entries_[i].fileId >= 0 && strcmp(fileName, entries_[i].fileName) == 0) {
                 // Hint: a file can only has a file handle alive
-                throw FileOpenedException();
+                // throw FileOpenedException();
+                entries_[i].counter += 1;
+                return i;
             }
 
         int k;
@@ -89,15 +91,15 @@ namespace pagefs {
 
     void PageFS::closeFile(FileId f) {
         // TODO use TRIE, hash or any other high level tech to control the files.
-        if (entries_[f].counter == 0) {
-            throw FileClosedException();
-        }
+//        if (entries_[f].counter == 0) {
+//            throw FileClosedException();
+//        }
         commitAll(f);
-        entries_[f].counter -= 1;
-        if (entries_[f].counter == 0) {
-            entries_[f].fileId = -1;  // release
-            fclose(filePtr_[f]);
-        }
+//        entries_[f].counter -= 1;
+//        if (entries_[f].counter == 0) {
+//            entries_[f].fileId = -1;  // release
+//            fclose(filePtr_[f]);
+//        }
     }
 
     char *PageFS::loadPage(int fileId, int pageNum) {
@@ -285,6 +287,7 @@ namespace pagefs {
                 continue;
             table[i] = table[j];
             table[j].node = nullptr;
+            table[i].node->item = table + i;
             i = j;
         } while (true);
 //        Debug::info("popped");
@@ -331,13 +334,14 @@ namespace pagefs {
     void LRUList::move_back(LRUListNode *p) {
         if (p == nullptr) return;
         if (p == tail) return;
+        if (p == head) head = p->next;
         LRUListNode *q = p->prev, *r = p->next;
         if (q != nullptr) q->next = r;
         if (r != nullptr) r->prev = q;
         if (tail != nullptr) {
             tail->next = p;
-            p->prev = tail;
         }
+        p->prev = tail;
         tail = p;
         p->next = nullptr;
     }

@@ -14,7 +14,7 @@ namespace pagefs {
     // pagefs
     const int MAX_FILE_NUM(32767);
     const int PAGE_SIZE(256);
-    const int MAX_BUFFER_SIZE(4); // has to be 2^n for the performance concern
+    const int MAX_BUFFER_SIZE(64); // has to be 2^n for the performance concern
     const int MAX_BUFFER_SIZE_M1 = MAX_BUFFER_SIZE - 1;
 
     const int ALL_PAGES(-1);
@@ -36,6 +36,14 @@ namespace pagefs {
         int pinned;
         int fileId;
         int pageNum;
+        BufferPage &operator=(const BufferPage &p) {
+            data = p.data;
+            dirty = p.dirty;
+            pinned = p.pinned;
+            fileId = p.fileId;
+            pageNum = p.pageNum;
+            return *this;
+        }
     };
 
     struct LRUListNode;
@@ -52,6 +60,12 @@ namespace pagefs {
         LRUListNode *node;  // nullptr means unused
         int hashValue;
         LRUHashItem(): node(nullptr) {}
+        LRUHashItem &operator=(const LRUHashItem &h) {
+            data = h.data;
+            node = h.node;
+            hashValue = h.hashValue;
+            return *this;
+        }
     };
 
     struct LRUHash {
@@ -102,6 +116,7 @@ namespace pagefs {
         void destroyFile(const char *fileName);
         FileId openFile(const char *fileName);
         void closeFile(FileId f);
+
         char *loadPage(int fileId, int pageNum);
         void forcePage(int fileId, int pageNum);
         void unpinPage(int fileId, int pageNum);

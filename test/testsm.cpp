@@ -30,6 +30,8 @@ int main() {
 
     sqleast::sm::DBManager manager("testing");
     manager.createTable("publisher", 3, attrs);
+    manager.createTable("crap", 2, attrs + 1);
+    manager.dropTable("publisher");
 
     sqleast::sm::SystemManager::closeDB();
     return 0;

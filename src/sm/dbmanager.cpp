@@ -1,6 +1,11 @@
 #include "rm/filehandle.h"
+#include "rm/filescan.h"
+#include "rm/exception.h"
 #include "sm/dbmanager.h"
 #include "sm/systemmanager.h"
+
+#include <string>
+#include <vector>
 
 namespace sqleast {
     namespace sm {
@@ -53,5 +58,38 @@ namespace sqleast {
                     (int)FLAG_SIZE + relInfo.tupleLength + relInfo.bitmapSize,
                     false);
         }
+
+        void DBManager::dropTable(const char *relName) {
+            /* FileHandle &handle,
+                    AttrType attrType, int attrLength, int attrOffset,
+                    int nullBitOffset, int nullBitMask,
+                    CompOp compOp, void *value) */
+            std::vector< RID > rids;
+            char name[MAX_NAME_LENGTH];
+            strcpy(name, relName);
+            rm::FileScan attrScan(attrCatalog_, STRING, MAX_NAME_LENGTH, 0, 0, 0, EQ_OP, name);
+            while (true) {
+                Record &r = attrScan.next();
+                if (r.rid.pageNum <= 0)
+                    break;
+                rids.push_back(r.rid);
+            }
+            for (int i = 0; i < rids.size(); i++) {
+                attrCatalog_.deleteRec(rids[i]);
+            }
+            rids.clear();
+            rm::FileScan relScan(relCatalog_, STRING, MAX_NAME_LENGTH, 0, 0, 0, EQ_OP, name);
+            while (true) {
+                Record &r = relScan.next();
+                if (r.rid.pageNum <= 0)
+                    break;
+                rids.push_back(r.rid);
+            }
+            for (int i = 0; i < rids.size(); i++) {
+                relCatalog_.deleteRec(rids[i]);
+            }
+            rids.clear();
+        }
+
     }
 }

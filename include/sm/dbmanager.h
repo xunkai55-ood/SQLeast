@@ -15,7 +15,7 @@ namespace sqleast {
             DBManager(const char *dbName);
             ~DBManager();
             void createTable(const char *relName, int attrNum, AttrInfo *attrs);
-            void dropTable(char *relName);
+            void dropTable(const char *relName);
             void createIndex(const char *relName, const char *attrName);
             void dropIndex(const char *relName, const char *attrName);
 
