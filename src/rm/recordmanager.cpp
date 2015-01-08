@@ -1,4 +1,4 @@
-#include "rm/core.h"
+#include "rm/recordmanager.h"
 #include "rm/filehandle.h"
 #include "rm/exception.h"
 #include "rm/bitmaputil.h"
@@ -8,7 +8,7 @@ namespace sqleast {
 
         using namespace pagefs;
 
-        void RecordManager::createFile(const char *fileName, int recordSize, bool override) {
+        void RecordManager::createFile(char const *fileName, int recordSize, bool override) {
             PageFS &fs = PageFS::getInstance();
             fs.createFile(fileName, override);
             int fid = fs.openFile(fileName);
@@ -32,13 +32,13 @@ namespace sqleast {
             std::cout << "!!!" << std::endl;
         }
 
-        FileHandle RecordManager::openFile(const char *fileName) {
+        FileHandle RecordManager::openFile(char const*fileName) {
             PageFS &fs = PageFS::getInstance();
             int fid = fs.openFile(fileName);
             return rm::FileHandle(fid);
         }
 
-        void RecordManager::destroyFile(const char *fileName) {
+        void RecordManager::destroyFile(char const *fileName) {
             PageFS &fs = PageFS::getInstance();
             fs.destroyFile(fileName);
         }

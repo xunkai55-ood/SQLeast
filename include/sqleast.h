@@ -1,6 +1,8 @@
 #ifndef SQLEAST_DEF_H
 #define SQLEAST_DEF_H
 
+#define PATH_SEP "/"
+
 #include "pagefs/pagefs.h"
 
 namespace sqleast {
@@ -9,7 +11,10 @@ namespace sqleast {
 
      */
 
-    enum AttrType {INT, FLOAT, STRING};
+    const int MAX_NAME_LENGTH = 20;
+    const int MAX_PATH_LENGTH = 200;
+
+    enum AttrType {INT, STRING};
 
     enum CompOp {NO_OP, EQ_OP, LT_OP, GT_OP, LE_OP, GE_OP, NE_OP, IS_NULL_OP, NOT_NULL_OP};
 
