@@ -295,7 +295,7 @@ namespace sqleast {
             Node v;
             getNode(rid, v);
             if(v.isLeaf){
-                if((B_PLUS_TREE_BRANCH + 2) / 2 <= v.size) return;
+                if(B_PLUS_TREE_BRANCH / 2 <= v.size) return;
                 if(getRootRID() == rid) {
                     return;
                 }
@@ -307,7 +307,7 @@ namespace sqleast {
                 if(r > 0){
                     Node ls;
                     getNode(p.n[r-1], ls);
-                    if((B_PLUS_TREE_BRANCH + 2) / 2 < ls.size){
+                    if(B_PLUS_TREE_BRANCH / 2 < ls.size){
                         p.k[r-1] = ls.k[ls.size - 1];
                         v.insertN(ls.n[ls.size - 1], 0);
                         ls.removeN(ls.size - 1);
@@ -322,7 +322,7 @@ namespace sqleast {
                 if(r < p.size){
                     Node rs;
                     getNode(p.n[r+1], rs);
-                    if((B_PLUS_TREE_BRANCH + 2) / 2 < rs.size){
+                    if(B_PLUS_TREE_BRANCH / 2 < rs.size){
                         v.insertN(rs.n[0], v.size);
                         rs.removeN(0);
                         v.insertK(rs.k[0], v.size);
@@ -376,6 +376,11 @@ namespace sqleast {
             else{
                 if((B_PLUS_TREE_BRANCH) / 2 <= v.size) return;
                 if(getRootRID() == rid) {
+                    if(v.size == 0){
+                        RID child = v.n[0];
+                        setRoot(child);
+                        releaseNode(rid);
+                    }
                     return;
                 }
                 RID pid = v.parent;
@@ -386,7 +391,7 @@ namespace sqleast {
                 if(r > 0){
                     Node ls;
                     getNode(p.n[r-1], ls);
-                    if((B_PLUS_TREE_BRANCH + 2) / 2 < ls.size){
+                    if(B_PLUS_TREE_BRANCH / 2 < ls.size){
                         v.insertN(ls.n[ls.size], 0);
                         ls.removeN(ls.size);
                         v.insertK(p.k[r-1], 0);
@@ -401,7 +406,7 @@ namespace sqleast {
                 if(r < p.size){
                     Node rs;
                     getNode(p.n[r+1], rs);
-                    if((B_PLUS_TREE_BRANCH + 2) / 2 < rs.size){
+                    if(B_PLUS_TREE_BRANCH / 2 < rs.size){
                         v.insertN(rs.n[0], v.size + 1);
                         rs.removeN(0);
                         v.insertK(p.k[r], v.size);
