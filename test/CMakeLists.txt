@@ -13,3 +13,6 @@ target_link_libraries(testix pagefs sqleast-rm sqleast-ix)
 
 add_executable(testsm testsm.cpp)
 target_link_libraries(testsm pagefs sqleast-rm sqleast-ix sqleast-sm boost_system boost_filesystem)
+
+add_executable(testql testql.cpp)
+target_link_libraries(testql)

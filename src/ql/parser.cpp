@@ -4,7 +4,10 @@
 namespace sqleast {
     namespace ql {
 
-        StructuredQuery* Parser::parse(string input) {
+        Parser::Parser() : q_(nullptr) {
+        }
+
+        StructuredQuery* Parser::parse(string &input) {
             if (q_ != nullptr) delete q_;
 
 
