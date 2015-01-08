@@ -5,11 +5,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 set(CMAKE_BUILD_TYPE DEBUG)
 
-set(Boost_USE_STATIC_LIBS ON)
-find_package(Boost 1.35 REQUIRED)
+#set(Boost_USE_STATIC_LIBS ON)
+#find_package(Boost 1.35 REQUIRED)
 
-include_directories(${Boost_INCLUDE_DIRS})
-link_directories(${Boost_LIBRARY_DIRS})
+#include_directories(${Boost_INCLUDE_DIRS})
+#link_directories(${Boost_LIBRARY_DIRS})
 
 message("Build: ${CMAKE_BUILD_TYPE}")
 message("Flags: ${CMAKE_CXX_FLAGS_RELEASE}")
