@@ -5,6 +5,7 @@ namespace sqleast {
     namespace ix {
 
         int Node::getPosition(int value) {
+            //return the exact value small than or equal to value
             int lo = 0;
             int hi = size;
             int mi;
