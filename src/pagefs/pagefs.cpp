@@ -88,12 +88,6 @@ namespace pagefs {
             entries_[f].fileId = -1;  // release
             fclose(filePtr_[f]);
         }
-        for (int i = 0; i < MAX_BUFFER_SIZE; i++) {
-            if (lruTable_.table[i].node != nullptr && lruTable_.table[i].data.fileId == f) {
-                lruList_.remove(lruTable_.table[i].node);
-                lruTable_.popByKey(i);
-            }
-        }
     }
 
     char *PageFS::loadPage(int fileId, int pageNum) {
