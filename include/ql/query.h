@@ -18,7 +18,7 @@ namespace sqleast {
             SupportedQueryType type;
         };
 
-        struct SingleDBQuery: public StructuredQuery {
+        struct SingleStringQuery: public StructuredQuery {
             char dbName[MAX_NAME_LEN + 1];
         };
 
