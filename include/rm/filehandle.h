@@ -1,7 +1,7 @@
 #ifndef RM_FILEHANDLE_H
 #define RM_FILEHANDLE_H
 
-#include "core.h"
+#include "recordmanager.h"
 
 namespace sqleast {
     namespace rm {

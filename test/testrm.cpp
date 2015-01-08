@@ -1,4 +1,4 @@
-#include "rm/core.h"
+#include "rm/recordmanager.h"
 #include "rm/filehandle.h"
 #include "rm/filescan.h"
 

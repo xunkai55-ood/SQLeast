@@ -4,6 +4,16 @@
 #include <cstdio>
 #include <assert.h>
 
+#define PAGEFS_VERBOSE
+
+namespace {
+    #ifdef PAGEFS_VERBOSE
+    std::ostream &debug_ = std::cout;
+    #else
+    std::ostream debug_(0);
+    #endif
+}
+
 namespace pagefs {
 
     /* pagefs */
@@ -18,7 +28,7 @@ namespace pagefs {
     }
 
     PageFS::~PageFS() {
-        std::cout << "destructing pagefs" << std::endl;
+        debug_ << "destructing pagefs" << std::endl;
         commitAll(-1);
     }
 
@@ -102,7 +112,7 @@ namespace pagefs {
                 if (!commitOnePage())
                     throw NoBufError();
             }
-//            Debug::info("not found item");
+            debug_ << "[NOTINBUF]" << fileId << " " << pageNum << std::endl;
             BufferPage p;
             p.data = new char[PAGE_SIZE];
             memset(p.data, 0, PAGE_SIZE);
@@ -124,7 +134,7 @@ namespace pagefs {
 
             return p.data;
         } else {
-//            Debug::info("found item");
+            debug_ << "[INBUF]" << fileId << " " << pageNum << std::endl;
             lruList_.move_back(t->node);
             return t->data.data;
         }
@@ -172,6 +182,7 @@ namespace pagefs {
             return false;
         LRUHashItem *t = lruList_.remove(p);
         int key = (int)(t - lruTable_.table);
+        debug_ << "[RELEASE]" << t->data.fileId << " " << t->data.pageNum << std::endl;
         return writeBack(lruTable_.popByKey(key).data);
     }
 
@@ -182,6 +193,7 @@ namespace pagefs {
             if (fid < 0 || p->item->data.fileId == fid) {
                 LRUHashItem *t = lruList_.remove(p);
                 int key = (int)(t - lruTable_.table);
+                debug_ << "[RELEASE(ALL)]" << t->data.fileId << " " << t->data.pageNum << std::endl;
                 writeBack(lruTable_.popByKey(key).data);
             }
             p = q;
@@ -305,7 +317,7 @@ namespace pagefs {
     }
 
     LRUListNode *LRUList::push_back(LRUHashItem *p) {
-//        std::cout << "[PUSHBACK]" << p->data.fileId << " " << p->data.pageNum << std::endl;
+//        debug_ << "[PUSHBACK]" << p->data.fileId << " " << p->data.pageNum << std::endl;
         LRUListNode *n = new LRUListNode;
         n->item = p;
         n->prev = tail;
@@ -331,9 +343,9 @@ namespace pagefs {
     }
 
     LRUHashItem *LRUList::remove(LRUListNode *p) {
-//        std::cout << "[REMOVE] try" << std::endl;
+//        debug_ << "[REMOVE] try" << std::endl;
         if (p == nullptr) return nullptr;
-//        std::cout << "[REMOVE]" << p->item->data.fileId << " " << p->item->data.pageNum << std::endl;
+//        debug_ << "[REMOVE]" << p->item->data.fileId << " " << p->item->data.pageNum << std::endl;
         if (p == head) head = p->next;
         if (p == tail) tail = p->prev;
         LRUHashItem *res = p->item;

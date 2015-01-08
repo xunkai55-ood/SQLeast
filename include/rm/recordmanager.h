@@ -29,9 +29,9 @@ namespace sqleast {
         class RecordManager {
 
         public:
-            static void createFile(const char *fileName, int dataSize, bool override = false);
-            static FileHandle openFile(const char *fileName);
-            static void destroyFile(const char *fileName);
+            static void createFile(char const *fileName, int dataSize, bool override = false);
+            static FileHandle openFile(char const *fileName);
+            static void destroyFile(char const *fileName);
 
         };
     }
