@@ -15,7 +15,7 @@ namespace sqleast {
         private:
             StructuredQuery *q_;
 
-
+            std::string getWord(std::string& input);
         };
 
     }
