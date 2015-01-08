@@ -7,7 +7,7 @@ namespace sqleast {
         Parser::Parser() : q_(nullptr) {
         }
 
-        StructuredQuery* Parser::parse(string &input) {
+        StructuredQuery* Parser::parse(std::string input) {
             if (q_ != nullptr) delete q_;
 
 

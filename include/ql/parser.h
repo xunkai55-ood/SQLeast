@@ -12,7 +12,7 @@ namespace sqleast {
             Parser();
             ~Parser();
 
-            StructuredQuery *parse(string &input);
+            StructuredQuery *parse(string input);
 
         private:
             StructuredQuery *q_;
