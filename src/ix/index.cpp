@@ -364,9 +364,10 @@ namespace sqleast {
                         v.insertK(rs.k[j], nlen);
                         rs.removeK(j);
                     }
-                    releaseNode(p.n[r+1]);
                     p.removeN(r+1);
                     p.removeK(r);
+                    //TODO: release will produce error
+                    //releaseNode(p.n[r+1]);
                     commitNode(rid, v);
                     commitNode(pid, p);
                 }
@@ -454,7 +455,8 @@ namespace sqleast {
                     }
                     v.insertN(rs.n[0], nlen + 1 + len);
                     rs.removeN(0);
-                    releaseNode(p.n[r+1]);
+                    //TODO: release will produce error
+                    //releaseNode(p.n[r+1]);
                     p.removeN(r+1);
                     p.removeK(r);
                     commitNode(rid, v);

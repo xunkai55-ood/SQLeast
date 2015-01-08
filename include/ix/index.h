@@ -29,9 +29,12 @@ namespace sqleast {
             int rootSlotNum;
         };
 
+        class IndexScan;
         class Index {
 
         public:
+            friend class IndexScan;
+
             Index(const char *indexName);
             ~Index();
 
