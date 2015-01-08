@@ -57,8 +57,10 @@ int main()
     tree.insertEntry(19, rid);
     generateRID(rid);
     tree.insertEntry(20, rid);
+    generateRID(rid);
+    tree.insertEntry(21, rid);
 
-    //tree.removeEntry(5);
+    //tree.removeEntry(6);
     tree.printIndex();
     return 0;
 }

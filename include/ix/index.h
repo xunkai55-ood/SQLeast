@@ -13,8 +13,8 @@ namespace sqleast {
             bool isLeaf;
             int size; // if leaf then size of n and k; if not then size of k;
             RID parent;
-            RID n[B_PLUS_TREE_BRANCH + 1];
-            int k[B_PLUS_TREE_BRANCH + 1];
+            RID n[B_PLUS_TREE_BRANCH + 2];
+            int k[B_PLUS_TREE_BRANCH + 2];
 
             int getPosition(int value);
             bool insertN(RID value, int position);

@@ -23,19 +23,19 @@ namespace sqleast {
         bool Node::insertK(int value, int position) {
             if(isLeaf && size == B_PLUS_TREE_BRANCH + 1)
                 return false;
-            if(!isLeaf && size == B_PLUS_TREE_BRANCH)
+            if(!isLeaf && size == B_PLUS_TREE_BRANCH + 1)
                 return false;
             size ++;
-            for(int i = B_PLUS_TREE_BRANCH ; i > position ; i --)
+            for(int i = B_PLUS_TREE_BRANCH + 1 ; i > position ; i --)
                 k[i] = k[i-1];
             k[position] = value;
             return true;
         }
 
         bool Node::insertN(RID value, int position) {
-            if(size == B_PLUS_TREE_BRANCH + 1)
+            if(size == B_PLUS_TREE_BRANCH + 2)
                 return false;
-            for(int i = B_PLUS_TREE_BRANCH ; i > position ; i --)
+            for(int i = B_PLUS_TREE_BRANCH + 1 ; i > position ; i --)
                 n[i] = n[i-1];
             n[position] = value;
             return true;
@@ -45,7 +45,7 @@ namespace sqleast {
             if(size == 0)
                 return false;
             size --;
-            for(int i = position ; i < B_PLUS_TREE_BRANCH ; i ++)
+            for(int i = position ; i < B_PLUS_TREE_BRANCH + 1 ; i ++)
                 k[i] = k[i+1];
             return true;
         }
@@ -53,7 +53,7 @@ namespace sqleast {
         bool Node::removeN(int position) {
             if(size == 0)
                 return false;
-            for(int i = position ; i < B_PLUS_TREE_BRANCH ; i ++)
+            for(int i = position ; i < B_PLUS_TREE_BRANCH + 1 ; i ++)
                 n[i] = n[i+1];
             return true;
         }
@@ -99,6 +99,10 @@ namespace sqleast {
 
         RID Index::getRootRID() {
             return RID(indexInfo_.rootPageNum, indexInfo_.rootSlotNum);
+        }
+
+        void Index::getRoot(Node &node) {
+            getNode(getRootRID(), node);
         }
 
         void Index::setRoot(RID rid) {
@@ -172,10 +176,11 @@ namespace sqleast {
             if(v.pageNum >= 0)
                 return v;
             int posi = v.slotNum;
+            std::cout << posi << std::endl;
             Node leaf;
             getNode(hot_, leaf);
-            leaf.insertK(key, posi);
             leaf.insertN(value, posi);
+            leaf.insertK(key, posi);
             commitNode(hot_, leaf);
             incIndexSize();
             solveOverFlow(hot_);
@@ -203,7 +208,7 @@ namespace sqleast {
             Node v;
             getNode(rid, v);
             if(v.isLeaf) {
-                if (B_PLUS_TREE_BRANCH + 1 >= v.size) return;
+                if (B_PLUS_TREE_BRANCH >= v.size) return;
                 int half = (B_PLUS_TREE_BRANCH + 1) / 2;
                 RID nid = allocateNode();
                 Node n;
@@ -223,12 +228,13 @@ namespace sqleast {
                     root.isLeaf = false;
                     root.insertN(rid, 0);
                     v.parent = rt;
+                    commitNode(rt, root);
                 }
                 RID pid = v.parent;
                 Node p;
                 getNode(pid, p);
                 int rank = p.getPosition(v.k[0]) + 1;
-                p.insertK(v.k[half], rank);
+                p.insertK(n.k[0], rank);
                 p.insertN(nid, rank + 1);
                 n.parent = pid;
                 commitNode(rid, v);
@@ -238,7 +244,7 @@ namespace sqleast {
             }
             else
             {
-                if (B_PLUS_TREE_BRANCH + 1 >= v.size + 1) return;
+                if (B_PLUS_TREE_BRANCH >= v.size) return;
                 int half = (B_PLUS_TREE_BRANCH + 1) / 2;
                 RID nid = allocateNode();
                 Node n;
@@ -249,9 +255,17 @@ namespace sqleast {
                     v.removeN(half + 1);
                     n.insertK(v.k[half + 1], j);
                     v.removeK(half + 1);
+                    Node tmp;
+                    getNode(n.n[j], tmp);
+                    tmp.parent = nid;
+                    commitNode(n.n[j], tmp);
                 }
                 n.insertN(v.n[half + 1], B_PLUS_TREE_BRANCH - half);
                 v.removeN(half + 1);
+                Node tmp;
+                getNode(n.n[B_PLUS_TREE_BRANCH - half], tmp);
+                tmp.parent = nid;
+                commitNode(n.n[B_PLUS_TREE_BRANCH - half], tmp);
                 if(getRootRID() == rid){
                     RID rt = allocateNode();
                     setRoot(rt);
@@ -260,6 +274,7 @@ namespace sqleast {
                     root.isLeaf = false;
                     root.insertN(rid, 0);
                     v.parent = rt;
+                    commitNode(rt, root);
                 }
                 RID pid = v.parent;
                 Node p;
@@ -359,7 +374,7 @@ namespace sqleast {
                 return;
             }
             else{
-                if((B_PLUS_TREE_BRANCH + 2) / 2 <= v.size) return;
+                if((B_PLUS_TREE_BRANCH) / 2 <= v.size) return;
                 if(getRootRID() == rid) {
                     return;
                 }
@@ -445,10 +460,6 @@ namespace sqleast {
             }
         }
 
-        void Index::getRoot(Node &node) {
-            getNode(getRootRID(), node);
-        }
-
         void Index::printIndex() {
             printNode(getRootRID());
         }
@@ -456,18 +467,19 @@ namespace sqleast {
         void Index::printNode(RID rid){
             Node n;
             getNode(rid, n);
-//            std::cout << "SIZE: " << n.size << " ISLEAF: " << n.isLeaf << std::endl;
+            /*std::cout << "this:" << rid.pageNum << "," << rid.slotNum << std::endl;
+            std::cout << "parent:" << n.parent.pageNum << "," << n.parent.slotNum << std::endl;*/
             if(n.isLeaf){
                 for(int i = 0 ; i < n.size ; i ++)
                 {
-                    std::cout << "(" << n.n[i].pageNum << "," << n.n[i].slotNum << ")" << " " << n.k[i];
+                    std::cout << "(" << n.n[i].pageNum << "," << n.n[i].slotNum << ")" << " " << n.k[i] << " | ";
                 }
                 std::cout << std::endl;
             }
             else{
                 for(int i = 0 ; i < n.size ; i ++)
                 {
-                    std::cout << "(" << n.n[i].pageNum << "," << n.n[i].slotNum << ")" << " " << n.k[i];
+                    std::cout << "(" << n.n[i].pageNum << "," << n.n[i].slotNum << ")" << " " << n.k[i] << " | ";
                 }
                 std::cout << "(" << n.n[n.size].pageNum << "," << n.n[n.size].slotNum << ")" << std::endl;
                 for(int i = 0 ; i <= n.size ; i ++)
