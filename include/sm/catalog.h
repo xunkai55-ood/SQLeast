@@ -16,6 +16,7 @@ namespace sqleast {
             int nullBitOffset;
             int nullBitMask;
             int indexNo;
+            bool isPrimary;
         };
 
         struct RelInfo {

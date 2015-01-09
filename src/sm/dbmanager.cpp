@@ -32,6 +32,7 @@ namespace sqleast {
                 dataAttrInfo.attrLength = (*attrs).attrLength;
                 dataAttrInfo.attrType = (*attrs).attrType;
                 dataAttrInfo.nullable = (*attrs).nullable;
+                dataAttrInfo.isPrimary = (*attrs).isPrimary;
                 dataAttrInfo.indexNo = i;
                 dataAttrInfo.offset = offset;
                 dataAttrInfo.nullBitOffset = i / 8;
@@ -119,6 +120,10 @@ namespace sqleast {
                 if (dai->nullable == 0) {
                     std::cout << "NOT NULL ";
                 }
+                if (dai->isPrimary) {
+                    std::cout << "primary key ";
+                }
+                std::cout << std::endl;
             }
         }
 
