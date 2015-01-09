@@ -42,7 +42,7 @@ namespace sqleast {
             AttrType *types[MAX_ATTR_NUM];
             int attrLengths[MAX_ATTR_NUM];
             int attrNum;
-            void execute;
+            void execute();
         };
 
     }
