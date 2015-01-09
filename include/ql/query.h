@@ -5,6 +5,8 @@
 
 namespace sqleast {
 
+    extern sm::DBManager dbManager;
+
     namespace ql {
         enum SupportedQueryType {
             Q_CREATE_DB,
@@ -18,15 +20,18 @@ namespace sqleast {
 
         struct StructuredQuery {
             SupportedQueryType type;
+            virtual void execute();
         };
 
         struct SingleStringQuery: public StructuredQuery {
-            char dbName[MAX_NAME_LEN + 1];
+            char name[MAX_NAME_LEN + 1];
+            void execute();
         };
 
-        struct CreateTableQuery: public CreateTableQuery {
+        struct CreateTableQuery: public StructuredQuery {
             char dbName[MAX_NAME_LEN + 1];
             AttrInfo attrs[MAX_ATTR_NUM];
+            void execute();
         };
 
     }

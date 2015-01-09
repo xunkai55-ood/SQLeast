@@ -19,6 +19,11 @@ namespace sqleast {
             void createIndex(const char *relName, const char *attrName);
             void dropIndex(const char *relName, const char *attrName);
 
+            void showTables();
+            void descTable(const char *relName);
+
+            void getCol(char *data, int offset, int size, AttrType type, void *target);
+
         private:
             rm::FileHandle relCatalog_, attrCatalog_;
         };

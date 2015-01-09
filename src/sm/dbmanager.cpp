@@ -91,5 +91,36 @@ namespace sqleast {
             rids.clear();
         }
 
+        void DBManager::showTables() {
+            char name[MAX_NAME_LENGTH];
+            rm::FileScan relScan(relCatalog_, STRING, MAX_NAME_LENGTH, 0, 0, 0, NO_OP, name);
+            while (true) {
+                Record &r = relScan.next();
+                if (r.rid.pageNum <= 0) break;
+                getCol(r.getData(), 0, MAX_NAME_LENGTH, STRING, name);
+                std::cout << name << std::endl;
+            }
+        }
+
+        void DBManager::descTable(const char *relName) {
+            char name[MAX_NAME_LENGTH];
+            strcpy(name, relName);
+            rm::FileScan attrScan(attrCatalog_, STRING, MAX_NAME_LENGTH, 0, 0, 0, EQ_OP, name);
+            while (true) {
+                Record &r = attrScan.next();
+                if (r.rid.pageNum <= 0) break;
+                DataAttrInfo *dai = (DataAttrInfo*) r.getData();
+                std::cout << dai->attrName << " ";
+                if (dai->attrType == INT) {
+                    std::cout << "int ";
+                } else {
+                    std::cout << "vchar(" << dai->attrLength << ") ";
+                }
+                if (dai->nullable == 0) {
+                    std::cout << "NOT NULL ";
+                }
+            }
+        }
+
     }
 }
