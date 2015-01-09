@@ -20,7 +20,6 @@ namespace sqleast {
 
         struct StructuredQuery {
             SupportedQueryType type;
-            virtual void execute();
         };
 
         struct SingleStringQuery: public StructuredQuery {
@@ -29,8 +28,9 @@ namespace sqleast {
         };
 
         struct CreateTableQuery: public StructuredQuery {
-            char dbName[MAX_NAME_LEN + 1];
+            char name[MAX_NAME_LENGTH + 1];
             AttrInfo attrs[MAX_ATTR_NUM];
+            int attrNum;
             void execute();
         };
 

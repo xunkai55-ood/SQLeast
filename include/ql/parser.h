@@ -10,12 +10,16 @@ namespace sqleast {
         class Parser {
 
         public:
-            StructuredQuery *parse(std::string input);
+            Parser(){
+                q_ = nullptr;
+            }
+            StructuredQuery *parse(std::string input); // input should change \n to space and remove the end ; of input
 
         private:
             StructuredQuery *q_;
 
             std::string getWord(std::string& input);
+            void getAttr(std::string input, int& type, int& len);
         };
 
     }

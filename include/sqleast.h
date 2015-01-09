@@ -84,6 +84,7 @@ namespace sqleast {
         AttrType attrType;
         int attrLength;
         int nullable;
+        bool isPrimary;
     };
 
 }
