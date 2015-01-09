@@ -20,7 +20,8 @@ string beautiful(string &s) {
             if (i == 0 || t[k] == ' ') {
 
             } else {
-
+                t += ' ';
+                k += 1;
             }
         } else {
             t += s[i];
