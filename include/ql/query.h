@@ -36,7 +36,7 @@ namespace sqleast {
             void execute();
         };
 
-        struct InsertTableQuery: public StructuredQuery {
+        struct InsertQuery: public StructuredQuery {
             char relName[MAX_NAME_LENGTH + 1];
             void *attrs[MAX_ATTR_NUM];
             AttrType *types[MAX_ATTR_NUM];
