@@ -6,6 +6,7 @@
 
 #include <string>
 #include <vector>
+#include <Python/Python.h>
 
 namespace sqleast {
     namespace sm {
@@ -124,6 +125,15 @@ namespace sqleast {
                     std::cout << "primary key ";
                 }
                 std::cout << std::endl;
+            }
+        }
+
+        void DBManager::getCol(char *data, int offset, int size, AttrType type, void *target) {
+            data += offset;
+            if (type == INT) {
+                *(int*)target = *(int*)data;
+            } else {
+                strcpy((char*)target, data);
             }
         }
 
