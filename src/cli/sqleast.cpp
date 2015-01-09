@@ -12,9 +12,12 @@ int main() {
         string s = "";
         char c;
 
-//        if (s) break;
+        while ((c = getchar()) != ';') s += c;
+        if (s == "QUIT") break;
+
         cout << "[COMMAND]:" << s << endl;
     }
+    return 0;
 }
 
 #endif
