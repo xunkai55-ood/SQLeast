@@ -150,5 +150,19 @@ namespace sqleast {
             }
         }
 
+        RelAttrInfo DBManager::getRelAttrInfo(const char *relName) {
+            RelAttrInfo v;
+            char name[MAX_NAME_LENGTH];
+            strcpy(name, relName);
+            rm::FileScan attrScan(attrCatalog_, STRING, MAX_NAME_LENGTH, 0, 0, 0, EQ_OP, name);
+            while (true) {
+                Record &r = attrScan.next();
+                if (r.rid.pageNum <= 0) break;
+                DataAttrInfo *dai = (DataAttrInfo*) r.getData();
+                v.push_back(*dai);
+            }
+            return v;
+        }
+
     }
 }

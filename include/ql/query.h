@@ -55,7 +55,7 @@ namespace sqleast {
             char relName[MAX_NAME_LENGTH + 1];
             std::vector<InsertItem> v;
 
-//            void execute();
+            void execute();
         };
 
         /* where item */
@@ -79,7 +79,7 @@ namespace sqleast {
 
         /* delete */
         struct DeleteQuery {
-            string relName;
+            std::string relName;
             WhereClause where;
         };
 

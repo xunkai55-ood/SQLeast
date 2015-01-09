@@ -61,5 +61,16 @@ namespace sqleast {
             dbManager->createTable(name, attrNum, attrs);
         }
 
+        void InsertQuery::execute() {
+            if (dbManager == nullptr) {
+                std::cerr << "[ERROR] DB not found" << std::endl;
+                return;
+            }
+            if (!dbManager->findTable(relName)) {
+                std::cerr << "[ERROR] Realtion not found" << std::endl;
+                return;
+            }
+
+        }
     }
 }

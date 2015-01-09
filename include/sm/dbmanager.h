@@ -5,8 +5,12 @@
 #include "rm/filehandle.h"
 #include "rm/recordmanager.h"
 
+#include <vector>
+
 namespace sqleast {
     namespace sm {
+
+        typedef std::vector< DataAttrInfo > RelAttrInfo;
 
         class DBManager {
 
@@ -23,6 +27,8 @@ namespace sqleast {
             void descTable(const char *relName);
 
             int findTable(const char *relName);
+
+            RelAttrInfo getRelAttrInfo(const char *relName);
 
             void getCol(char *data, int offset, int size, AttrType type, void *target);
 
