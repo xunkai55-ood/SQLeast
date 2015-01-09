@@ -3,7 +3,7 @@
 
 int main() {
     std::string s;
-    s = "CREATE TABLE book ( id int(10) NOT NULL, copies int(10), PRIMARY KEY (id) )";
+    s = "DELETE FROM addbc WHERE book.publisher_id>=publisher.id OR publisher.nation='PRC'";
     sqleast::ql::Parser p;
     p.parse(s);
 
