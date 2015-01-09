@@ -19,6 +19,8 @@ namespace sqleast {
             StructuredQuery *q_;
 
             std::string getWord(std::string& input);
+            std::string getTuple(std::string& input);
+            int findRealMark(std::string& input, char c);
             void getAttr(std::string input, int& type, int& len);
         };
 

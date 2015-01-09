@@ -14,11 +14,11 @@ namespace sqleast {
             } else if (type == Q_USE_DB) {
                 sm::SystemManager::useDB(name);
             } else if (type == Q_SHOW_TABLES) {
-                dbManager.showTables();
+                //dbManager.showTables();
             } else if (type == Q_DESC_TABLE) {
-                dbManager.descTable(name);
+                //dbManager.descTable(name);
             } else if (type == Q_DROP_TABLE) {
-                dbManager.dropTable(name);
+                //dbManager.dropTable(name);
             }
         }
 

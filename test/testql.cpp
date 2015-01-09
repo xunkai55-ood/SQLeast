@@ -3,7 +3,7 @@
 
 int main() {
     std::string s;
-    s = "CREATE TABLE book ( id int(10) NOT NULL, title varchar(100) NOT NULL, authors varchar(200), publisher_id int(10) NOT NULL, copies int(10), PRIMARY KEY (id) )";
+    s = "INSERT INTO publisher VALUES (100008,'Oxbow Books Limited','PRC'), (100010,'Aardwolf Publishing','PRC'), (100012,'Miguel Angel Porrua','PRC'), (100932,'Kr??ger, Frankfurt','PRC')";
     sqleast::ql::Parser p;
     p.parse(s);
 

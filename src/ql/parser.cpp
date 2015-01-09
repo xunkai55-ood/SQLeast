@@ -137,7 +137,61 @@ namespace sqleast {
                     k->type = Q_INSERT;
                     word = getWord(input);
                     if(word == "VALUES"){
-                        
+                        while(input != ""){
+                            word = getTuple(input);
+                            int rank1 = word.find("(");
+                            int rank2 = word.find(")");
+                            word = word.substr(rank1+1, rank2-rank1-1);
+                            InsertItem ii;
+                            while(true){
+                                int rank = findRealMark(word, ',');
+                                if(rank == -1){
+                                    if(word[0] == '\''){
+                                        word = word.substr(1, word.size() - 2);
+                                        InsertAttrItem iai;
+                                        iai.type = STRING;
+                                        iai.sValue = word;
+                                        ii.push_back(iai);
+                                    }
+                                    else{
+                                        InsertAttrItem iai;
+                                        iai.type = INT;
+                                        iai.iValue = atoi(word.c_str());
+                                        ii.push_back(iai);
+                                    }
+                                    break;
+                                }
+                                else{
+                                    std::string tmp = word.substr(0, rank);
+                                    if(tmp[0] == '\''){
+                                        tmp = tmp.substr(1, tmp.size() - 2);
+                                        InsertAttrItem iai;
+                                        iai.type = STRING;
+                                        iai.sValue = tmp;
+                                        ii.push_back(iai);
+                                    }
+                                    else{
+                                        InsertAttrItem iai;
+                                        iai.type = INT;
+                                        iai.iValue = atoi(tmp.c_str());
+                                        ii.push_back(iai);
+                                    }
+                                    word = word.substr(rank+1, word.size() - rank - 1);
+                                }
+                            }
+                            k->v.push_back(ii);
+                        }
+                    }
+                    q_ = k;
+                    std::cout << "insert\n";
+                    for(int i = 0 ; i < k->v.size() ; i ++){
+                        for(int j = 0 ; j < (k->v)[i].size(); j ++){
+                            std::cout << (k->v)[i][j].type << std::endl;
+                            if((k->v)[i][j].type == INT)
+                                std::cout << (k->v)[i][j].iValue << std::endl;
+                            if((k->v)[i][j].type == STRING)
+                                std::cout << (k->v)[i][j].sValue << std::endl;
+                        }
                     }
                 }
             }
@@ -162,6 +216,38 @@ namespace sqleast {
             else{
                 return input;
             }
+        }
+
+        std::string Parser::getTuple(std::string &input) {
+            while(input[0] == ' '){
+                input.erase(0, 1);
+            }
+            int rank = input.find("), (");
+
+            if(rank != -1) {
+                std::string word = input.substr(0, rank);
+                input = input.substr(rank + 2, input.size() - rank - 2);
+                return word;
+            }
+            else{
+                std::string res = input;
+                input = "";
+                return res;
+            }
+        }
+
+        int Parser::findRealMark(std::string &input, char c) {
+            bool isReal = true;
+            for(int i = 0 ; i < input.size() ; i ++){
+                if(input[i] == c){
+                    if(isReal)
+                        return i;
+                }
+                if(input[i] == '\''){
+                    isReal = !isReal;
+                }
+            }
+            return -1;
         }
 
         void Parser::getAttr(std::string input, int& type, int& len) {
