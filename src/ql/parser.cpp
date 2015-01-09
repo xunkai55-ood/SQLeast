@@ -198,6 +198,7 @@ namespace sqleast {
                     }
                     q_ = k;
                     std::cout << "insert\n";
+                    std::cout << k->relName << std::endl;
                     for(int i = 0 ; i < k->v.size() ; i ++){
                         for(int j = 0 ; j < (k->v)[i].size(); j ++){
                             std::cout << (k->v)[i][j].type << std::endl;
@@ -217,20 +218,317 @@ namespace sqleast {
                     DeleteQuery* k = new DeleteQuery();
                     k->relName = word;
                     k->type = Q_DELETE;
+                    WhereClause wc;
                     word = getWord(input);
                     if(word == "WHERE"){
-                        std::cout << "0\n";
+                        int rank = findRealMark(input, ' ');
+                        while(rank != -1) {
+                            word = input.substr(0, rank);
+                            input = input.substr(rank, input.size() - rank);
+                            int op;
+                            if ((op = findRealMark(word, '=')) != -1) {
+                                if (word[op - 1] == '!') {
+                                    std::string first = word.substr(0, op - 1);
+                                    std::string second = word.substr(op + 1, word.size() - op - 1);
+                                    WhereItem wi;
+                                    wi.op = NE_OP;
+                                    wi.op1 = first;
+                                    if (findRealMark(second, '.') != -1) {
+                                        wi.useOp2 = 1;
+                                        wi.op2 = second;
+                                    }
+                                    else {
+                                        if (second[0] == '\'') {
+                                            wi.type = STRING;
+                                            wi.sValue = second.substr(1, second.size() - 2);
+                                        }
+                                        else {
+                                            wi.type = INT;
+                                            wi.iValue = atoi(second.c_str());
+                                        }
+                                    }
+                                    wc.item.push_back(wi);
+                                }
+                                else {
+                                    if (word[op - 1] == '<') {
+                                        std::string first = word.substr(0, op - 1);
+                                        std::string second = word.substr(op + 1, word.size() - op - 1);
+                                        WhereItem wi;
+                                        wi.op = LE_OP;
+                                        wi.op1 = first;
+                                        if (findRealMark(second, '.') != -1) {
+                                            wi.useOp2 = 1;
+                                            wi.op2 = second;
+                                        }
+                                        else {
+                                            if (second[0] == '\'') {
+                                                wi.type = STRING;
+                                                wi.sValue = second.substr(1, second.size() - 2);
+                                            }
+                                            else {
+                                                wi.type = INT;
+                                                wi.iValue = atoi(second.c_str());
+                                            }
+                                        }
+                                        wc.item.push_back(wi);
+                                    }
+                                    else {
+                                        if (word[op - 1] == '>') {
+                                            std::string first = word.substr(0, op - 1);
+                                            std::string second = word.substr(op + 1, word.size() - op - 1);
+                                            WhereItem wi;
+                                            wi.op = GE_OP;
+                                            wi.op1 = first;
+                                            if (findRealMark(second, '.') != -1) {
+                                                wi.useOp2 = 1;
+                                                wi.op2 = second;
+                                            }
+                                            else {
+                                                if (second[0] == '\'') {
+                                                    wi.type = STRING;
+                                                    wi.sValue = second.substr(1, second.size() - 2);
+                                                }
+                                                else {
+                                                    wi.type = INT;
+                                                    wi.iValue = atoi(second.c_str());
+                                                }
+                                            }
+                                            wc.item.push_back(wi);
+                                        }
+                                        else {
+                                            std::string first = word.substr(0, op);
+                                            std::string second = word.substr(op + 1, word.size() - op - 1);
+                                            WhereItem wi;
+                                            wi.op = EQ_OP;
+                                            wi.op1 = first;
+                                            if (findRealMark(second, '.') != -1) {
+                                                wi.useOp2 = 1;
+                                                wi.op2 = second;
+                                            }
+                                            else {
+                                                if (second[0] == '\'') {
+                                                    wi.type = STRING;
+                                                    wi.sValue = second.substr(1, second.size() - 2);
+                                                }
+                                                else {
+                                                    wi.type = INT;
+                                                    wi.iValue = atoi(second.c_str());
+                                                }
+                                            }
+                                            wc.item.push_back(wi);
+                                        }
+                                    }
+                                }
+                            }
+                            else {
+                                if ((op = findRealMark(word, '>')) != -1) {
+                                    std::string first = word.substr(0, op);
+                                    std::string second = word.substr(op + 1, word.size() - op - 1);
+                                    WhereItem wi;
+                                    wi.op = GT_OP;
+                                    wi.op1 = first;
+                                    if (findRealMark(second, '.') != -1) {
+                                        wi.useOp2 = 1;
+                                        wi.op2 = second;
+                                    }
+                                    else {
+                                        if (second[0] == '\'') {
+                                            wi.type = STRING;
+                                            wi.sValue = second.substr(1, second.size() - 2);
+                                        }
+                                        else {
+                                            wi.type = INT;
+                                            wi.iValue = atoi(second.c_str());
+                                        }
+                                    }
+                                    wc.item.push_back(wi);
+                                }
+                                else {
+                                    if ((op = findRealMark(word, '<')) != -1) {
+                                        std::string first = word.substr(0, op);
+                                        std::string second = word.substr(op + 1, word.size() - op - 1);
+                                        WhereItem wi;
+                                        wi.op = LT_OP;
+                                        wi.op1 = first;
+                                        if (findRealMark(second, '.') != -1) {
+                                            wi.useOp2 = 1;
+                                            wi.op2 = second;
+                                        }
+                                        else {
+                                            if (second[0] == '\'') {
+                                                wi.type = STRING;
+                                                wi.sValue = second.substr(1, second.size() - 2);
+                                            }
+                                            else {
+                                                wi.type = INT;
+                                                wi.iValue = atoi(second.c_str());
+                                            }
+                                        }
+                                        wc.item.push_back(wi);
+                                    }
+                                }
+                            }
+                            word = getWord(input);
+                            if(word == "AND")
+                                wc.op.push_back(AND_OP);
+                            if(word == "OR")
+                                wc.op.push_back(OR_OP);
+                            rank = findRealMark(input, ' ');
+                        }
+                        int op;
+                        word = input;
+                        if ((op = findRealMark(word, '=')) != -1) {
+                            if (word[op - 1] == '!') {
+                                std::string first = word.substr(0, op - 1);
+                                std::string second = word.substr(op + 1, word.size() - op - 1);
+                                WhereItem wi;
+                                wi.op = NE_OP;
+                                wi.op1 = first;
+                                if (findRealMark(second, '.') != -1) {
+                                    wi.useOp2 = 1;
+                                    wi.op2 = second;
+                                }
+                                else {
+                                    if (second[0] == '\'') {
+                                        wi.type = STRING;
+                                        wi.sValue = second.substr(1, second.size() - 2);
+                                    }
+                                    else {
+                                        wi.type = INT;
+                                        wi.iValue = atoi(second.c_str());
+                                    }
+                                }
+                                wc.item.push_back(wi);
+                            }
+                            else {
+                                if (word[op - 1] == '<') {
+                                    std::string first = word.substr(0, op - 1);
+                                    std::string second = word.substr(op + 1, word.size() - op - 1);
+                                    WhereItem wi;
+                                    wi.op = LE_OP;
+                                    wi.op1 = first;
+                                    if (findRealMark(second, '.') != -1) {
+                                        wi.useOp2 = 1;
+                                        wi.op2 = second;
+                                    }
+                                    else {
+                                        if (second[0] == '\'') {
+                                            wi.type = STRING;
+                                            wi.sValue = second.substr(1, second.size() - 2);
+                                        }
+                                        else {
+                                            wi.type = INT;
+                                            wi.iValue = atoi(second.c_str());
+                                        }
+                                    }
+                                    wc.item.push_back(wi);
+                                }
+                                else {
+                                    if (word[op - 1] == '>') {
+                                        std::string first = word.substr(0, op - 1);
+                                        std::string second = word.substr(op + 1, word.size() - op - 1);
+                                        WhereItem wi;
+                                        wi.op = GE_OP;
+                                        wi.op1 = first;
+                                        if (findRealMark(second, '.') != -1) {
+                                            wi.useOp2 = 1;
+                                            wi.op2 = second;
+                                        }
+                                        else {
+                                            if (second[0] == '\'') {
+                                                wi.type = STRING;
+                                                wi.sValue = second.substr(1, second.size() - 2);
+                                            }
+                                            else {
+                                                wi.type = INT;
+                                                wi.iValue = atoi(second.c_str());
+                                            }
+                                        }
+                                        wc.item.push_back(wi);
+                                    }
+                                    else {
+                                        std::string first = word.substr(0, op);
+                                        std::string second = word.substr(op + 1, word.size() - op - 1);
+                                        WhereItem wi;
+                                        wi.op = EQ_OP;
+                                        wi.op1 = first;
+                                        if (findRealMark(second, '.') != -1) {
+                                            wi.useOp2 = 1;
+                                            wi.op2 = second;
+                                        }
+                                        else {
+                                            if (second[0] == '\'') {
+                                                wi.type = STRING;
+                                                wi.sValue = second.substr(1, second.size() - 2);
+                                            }
+                                            else {
+                                                wi.type = INT;
+                                                wi.iValue = atoi(second.c_str());
+                                            }
+                                        }
+                                        wc.item.push_back(wi);
+                                    }
+                                }
+                            }
+                        }
+                        else {
+                            if ((op = findRealMark(word, '>')) != -1) {
+                                std::string first = word.substr(0, op);
+                                std::string second = word.substr(op + 1, word.size() - op - 1);
+                                WhereItem wi;
+                                wi.op = GT_OP;
+                                wi.op1 = first;
+                                if (findRealMark(second, '.') != -1) {
+                                    wi.useOp2 = 1;
+                                    wi.op2 = second;
+                                }
+                                else {
+                                    if (second[0] == '\'') {
+                                        wi.type = STRING;
+                                        wi.sValue = second.substr(1, second.size() - 2);
+                                    }
+                                    else {
+                                        wi.type = INT;
+                                        wi.iValue = atoi(second.c_str());
+                                    }
+                                }
+                                wc.item.push_back(wi);
+                            }
+                            else {
+                                if ((op = findRealMark(word, '<')) != -1) {
+                                    std::string first = word.substr(0, op);
+                                    std::string second = word.substr(op + 1, word.size() - op - 1);
+                                    WhereItem wi;
+                                    wi.op = LT_OP;
+                                    wi.op1 = first;
+                                    if (findRealMark(second, '.') != -1) {
+                                        wi.useOp2 = 1;
+                                        wi.op2 = second;
+                                    }
+                                    else {
+                                        if (second[0] == '\'') {
+                                            wi.type = STRING;
+                                            wi.sValue = second.substr(1, second.size() - 2);
+                                        }
+                                        else {
+                                            wi.type = INT;
+                                            wi.iValue = atoi(second.c_str());
+                                        }
+                                    }
+                                    wc.item.push_back(wi);
+                                }
+                            }
+                        }
+                        k->where = wc;
                     }
                     else
                     {
-                        std::cout << "1\n";
                     }
+                    q_ = k;
+                    std::cout << "delete" << std::endl;
+                    std::cout << k->relName << std::endl;
                 }
             }
-
-            // q_ = new CreateDBQuery();
-            // q_.type = Q_CREATE_DB;
-            // return q_;
 
             return q_;
         }
@@ -269,6 +567,9 @@ namespace sqleast {
         }
 
         int Parser::findRealMark(std::string &input, char c) {
+            while(input[0] == ' '){
+                input.erase(0, 1);
+            }
             bool isReal = true;
             for(int i = 0 ; i < input.size() ; i ++){
                 if(input[i] == c){
