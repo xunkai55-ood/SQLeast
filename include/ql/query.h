@@ -25,7 +25,7 @@ namespace sqleast {
         };
 
         struct SingleStringQuery: public StructuredQuery {
-            char name[MAX_NAME_LEN + 1];
+            char name[MAX_NAME_LENGTH + 1];
             void execute();
         };
 
@@ -33,6 +33,7 @@ namespace sqleast {
             char name[MAX_NAME_LENGTH + 1];
             AttrInfo attrs[MAX_ATTR_NUM];
             int attrNum;
+
             void execute();
         };
 
