@@ -15,7 +15,9 @@ namespace sqleast {
             Q_SHOW_TABLES,
             Q_CREATE_TABLE,
             Q_DROP_TABLE,
-            Q_DESC_TABLE
+            Q_DESC_TABLE,
+
+            Q_INSERT
         };
 
         struct StructuredQuery {
