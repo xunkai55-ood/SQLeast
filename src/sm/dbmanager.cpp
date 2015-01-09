@@ -58,7 +58,7 @@ namespace sqleast {
             rm::RecordManager::createFile(
                     SystemManager::appendDBExt(relInfo.relName).c_str(),
                     (int)FLAG_SIZE + relInfo.tupleLength + relInfo.bitmapSize,
-                    false);
+                    true);
         }
 
         void DBManager::dropTable(const char *relName) {
@@ -102,6 +102,19 @@ namespace sqleast {
                 getCol(r.getData(), 0, MAX_NAME_LENGTH, STRING, name);
                 std::cout << name << std::endl;
             }
+        }
+
+        int DBManager::findTable(const char *relName) {
+            char name[MAX_NAME_LENGTH];
+            strcpy(name, relName);
+
+            rm::FileScan relScan(relCatalog_, STRING, MAX_NAME_LENGTH, 0, 0, 0, EQ_OP, name);
+            while (true) {
+                Record &r = relScan.next();
+                if (r.rid.pageNum <= 0) break;
+                return 1;
+            }
+            return 0;
         }
 
         void DBManager::descTable(const char *relName) {

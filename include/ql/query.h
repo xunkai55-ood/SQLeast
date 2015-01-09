@@ -38,9 +38,10 @@ namespace sqleast {
             AttrInfo attrs[MAX_ATTR_NUM];
             int attrNum;
 
-//            void execute();
+            void execute();
         };
 
+        /* insert */
         struct InsertAttrItem {
             void *attr;
             AttrType *type;

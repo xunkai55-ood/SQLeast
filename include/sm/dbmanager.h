@@ -22,6 +22,8 @@ namespace sqleast {
             void showTables();
             void descTable(const char *relName);
 
+            int findTable(const char *relName);
+
             void getCol(char *data, int offset, int size, AttrType type, void *target);
 
         private:

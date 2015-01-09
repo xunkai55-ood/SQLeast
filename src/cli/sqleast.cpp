@@ -39,7 +39,10 @@ int main() {
         char c;
 
         while ((c = getchar()) != ';') s += c;
-        if (s == "QUIT") break;
+        if (beautiful(s) == "QUIT") {
+            cout << "Bye" << endl;
+            break;
+        }
 
         ql::StructuredQuery *q = parser.parse(beautiful(s));
         if (q == nullptr) {
