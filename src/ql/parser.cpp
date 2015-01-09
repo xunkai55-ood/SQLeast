@@ -128,6 +128,19 @@ namespace sqleast {
                 std::cout << k->name << std::endl;
             }
 
+            if(firstWord == "INSERT"){
+                std::string secondWord = getWord(input);
+                if(secondWord == "INTO"){
+                    std::string word = getWord(input);
+                    InsertQuery* k = new InsertQuery();
+                    strcpy(k->relName, word.c_str());
+                    k->type = Q_INSERT;
+                    word = getWord(input);
+                    if(word == "VALUES"){
+                        
+                    }
+                }
+            }
 
             // q_ = new CreateDBQuery();
             // q_.type = Q_CREATE_DB;
