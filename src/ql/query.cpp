@@ -9,7 +9,7 @@ namespace sqleast {
         sm::DBManager *dbManager = nullptr;
 
         void SingleStringQuery::execute() {
-            if (type == Q_CREATE_DB) {
+            /*if (type == Q_CREATE_DB) {
                 try {
                     sm::SystemManager::createDB(name);
                 } catch (sm::SMException e) {
@@ -47,18 +47,18 @@ namespace sqleast {
                     return;
                 }
                 dbManager->dropTable(name);
-            }
+            }*/
         }
 
         void CreateTableQuery::execute() {
-            if (dbManager == nullptr) {
+            /*if (dbManager == nullptr) {
                 std::cerr << "[ERROR] DB not found" << std::endl;
                 return;
             }
             if (dbManager->findTable(name)) {
                 std::cerr << "[ERROR] Relation exists" << std::endl;
             }
-            dbManager->createTable(name, attrNum, attrs);
+            dbManager->createTable(name, attrNum, attrs);*/
         }
 
     }

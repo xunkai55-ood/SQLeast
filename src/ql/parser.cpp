@@ -46,6 +46,20 @@ namespace sqleast {
                                 (k->attrs)[no].nullable = false;
                                 word = getWord(input);
                                 word = getWord(input);
+                                if(word == "PRIMARY"){
+                                    word = getWord(input);
+                                    if(word == "KEY"){
+                                        word = getWord(input);
+                                        if(word[0] == '(' && word[(int)word.size() - 1] == ')')
+                                            word = word.substr(1, word.size() - 2);
+                                        for(int i = 0 ; i < no ; i ++){
+                                            if((k->attrs)[i].attrName == word){
+                                                (k->attrs)[i].isPrimary = true;
+                                            }
+                                        }
+                                        word = getWord(input);
+                                    }
+                                }
                             }
                             else{
                                 (k->attrs)[no].nullable = true;
@@ -192,6 +206,24 @@ namespace sqleast {
                             if((k->v)[i][j].type == STRING)
                                 std::cout << (k->v)[i][j].sValue << std::endl;
                         }
+                    }
+                }
+            }
+
+            if(firstWord == "DELETE"){
+                std::string secondWord = getWord(input);
+                if(secondWord == "FROM"){
+                    std::string word = getWord(input);
+                    DeleteQuery* k = new DeleteQuery();
+                    k->relName = word;
+                    k->type = Q_DELETE;
+                    word = getWord(input);
+                    if(word == "WHERE"){
+                        std::cout << "0\n";
+                    }
+                    else
+                    {
+                        std::cout << "1\n";
                     }
                 }
             }

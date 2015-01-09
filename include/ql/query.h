@@ -21,7 +21,10 @@ namespace sqleast {
             Q_DROP_TABLE,
             Q_DESC_TABLE,
 
-            Q_INSERT
+            Q_INSERT,
+            Q_DELETE,
+            Q_UPDATE,
+            Q_SEARCH
         };
 
         struct StructuredQuery {
@@ -78,8 +81,8 @@ namespace sqleast {
         };
 
         /* delete */
-        struct DeleteQuery {
-            string relName;
+        struct DeleteQuery : public StructuredQuery {
+            std::string relName;
             WhereClause where;
         };
 
