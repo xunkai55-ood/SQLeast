@@ -58,6 +58,31 @@ namespace sqleast {
 //            void execute();
         };
 
+        /* where item */
+        struct WhereItem {
+            CompOp op;
+            int iValue;
+            std::string sValue;
+            AttrType type;
+            std::string op1;
+            std::string op2;
+            int useOp2; // 1 means op1 CompOp op2
+        };
+
+        enum LogicOp {AND_OP, OR_OP};
+
+        struct WhereClause {
+            std::vector<WhereItem> item;
+            std::vector<LogicOp> op;
+            // op.size == item.size - 1;
+        };
+
+        /* delete */
+        struct DeleteQuery {
+            string relName;
+            WhereClause where;
+        };
+
     }
 }
 
