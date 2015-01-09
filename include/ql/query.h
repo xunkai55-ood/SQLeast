@@ -21,12 +21,13 @@ namespace sqleast {
         };
 
         struct SingleStringQuery: public StructuredQuery {
-            char dbName[MAX_NAME_LEN + 1];
+            char name[MAX_NAME_LENGTH + 1];
         };
 
-        struct CreateTableQuery: public CreateTableQuery {
-            char dbName[MAX_NAME_LEN + 1];
+        struct CreateTableQuery: public StructuredQuery {
+            char name[MAX_NAME_LENGTH + 1];
             AttrInfo attrs[MAX_ATTR_NUM];
+            int attrNum;
         };
 
     }
