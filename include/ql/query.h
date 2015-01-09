@@ -3,12 +3,13 @@
 
 #include <vector>
 #include <sqleast.h>
+#include <vector>
 
 #include "sm/dbmanager.h"
 
 namespace sqleast {
 
-    extern sm::DBManager dbManager;
+//    extern sm::DBManager dbManager;
 
     namespace ql {
         enum SupportedQueryType {
@@ -43,9 +44,9 @@ namespace sqleast {
 
         /* insert */
         struct InsertAttrItem {
-            void *attr;
-            AttrType *type;
-            int length;
+            int iValue;
+            std::string sValue;
+            AttrType type;
         };
 
         typedef std::vector< InsertAttrItem > InsertItem;
