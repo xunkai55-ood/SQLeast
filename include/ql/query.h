@@ -37,12 +37,18 @@ namespace sqleast {
             void execute();
         };
 
+        struct InsertAttrItem {
+            void *attr;
+            AttrType *type;
+            int length;
+        };
+
+        typedef std::vector< InsertAttrItem > InsertItem;
+
         struct InsertQuery: public StructuredQuery {
             char relName[MAX_NAME_LENGTH + 1];
-            void *attrs[MAX_ATTR_NUM];
-            AttrType *types[MAX_ATTR_NUM];
-            int attrLengths[MAX_ATTR_NUM];
-            int attrNum;
+            std::vector<InsertItem> v;
+
             void execute();
         };
 
