@@ -1,8 +1,11 @@
 #ifndef QL_QUERY_H
 #define QL_QUERY_H
 
+#include <vector>
 #include <sqleast.h>
 #include <vector>
+
+#include "sm/dbmanager.h"
 
 namespace sqleast {
 
@@ -23,6 +26,7 @@ namespace sqleast {
 
         struct StructuredQuery {
             SupportedQueryType type;
+            virtual void execute() {std::cerr << "NOT IMPL" << std::endl;}
         };
 
         struct SingleStringQuery: public StructuredQuery {
@@ -35,7 +39,7 @@ namespace sqleast {
             AttrInfo attrs[MAX_ATTR_NUM];
             int attrNum;
 
-            void execute();
+//            void execute();
         };
 
         struct InsertAttrItem {
@@ -50,7 +54,7 @@ namespace sqleast {
             char relName[MAX_NAME_LENGTH + 1];
             std::vector<InsertItem> v;
 
-            void execute();
+//            void execute();
         };
 
     }

@@ -6,6 +6,8 @@ namespace sqleast {
 
     namespace ql {
 
+        sm::DBManager *dbManager = nullptr;
+
         void SingleStringQuery::execute() {
             if (type == Q_CREATE_DB) {
                 sm::SystemManager::createDB(name);
@@ -13,12 +15,25 @@ namespace sqleast {
                 sm::SystemManager::destroyDB(name);
             } else if (type == Q_USE_DB) {
                 sm::SystemManager::useDB(name);
+                dbManager = new sm::DBManager(name);
             } else if (type == Q_SHOW_TABLES) {
-                //dbManager.showTables();
+                if (dbManager == nullptr) {
+                    std::cerr << "[ERROR] DB not found" << std::endl;
+                    return;
+                }
+                dbManager->showTables();
             } else if (type == Q_DESC_TABLE) {
-                //dbManager.descTable(name);
+                if (dbManager == nullptr) {
+                    std::cerr << "[ERROR] DB not found" << std::endl;
+                    return;
+                }
+                dbManager->descTable(name);
             } else if (type == Q_DROP_TABLE) {
-                //dbManager.dropTable(name);
+                if (dbManager == nullptr) {
+                    std::cerr << "[ERROR] DB not found" << std::endl;
+                    return;
+                }
+                dbManager->dropTable(name);
             }
         }
 

@@ -10,14 +10,14 @@
 using namespace std;
 using namespace sqleast;
 
-ql::Parser parser();
+ql::Parser parser;
 
 string beautiful(string &s) {
     string t = "";
     int k = -1;
     for (int i = 0; i < s.length(); i++) {
         if (s[i] == ' ' || s[i] == '\t' || s[i] == '\n' || s[i] == '\r') {
-            if (i == 0 || t[k] == ' ') {
+            if (k == -1 || t[k] == ' ') {
 
             } else {
                 t += ' ';
@@ -41,7 +41,12 @@ int main() {
         while ((c = getchar()) != ';') s += c;
         if (s == "QUIT") break;
 
-        std::cout << beautiful(s) << std::endl;
+        ql::StructuredQuery *q = parser.parse(beautiful(s));
+        if (q == nullptr) {
+            std::cout << "ERROR: can not parse";
+        } else {
+            q->execute();
+        }
     }
     return 0;
 }
