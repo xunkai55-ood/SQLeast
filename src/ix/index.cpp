@@ -62,9 +62,9 @@ namespace sqleast {
         /* index */
 
         void Index::createIndex(const char *indexName) {
-            std::cout << "very before open index" << std::endl;
+//            std::cout << "very before open index" << std::endl;
             rm::RecordManager::createFile(indexName, sizeof(Node), true);
-            std::cout << "before open index" << std::endl;
+//            std::cout << "before open index" << std::endl;
             Index idx(indexName);
             RID rid = idx.allocateNode();
             idx.indexInfo_.indexSize = 0;
@@ -77,7 +77,7 @@ namespace sqleast {
             memset(n.n, 0, sizeof(n.n));
             memset(n.k, 0, sizeof(n.n));
             idx.commitNode(rid, n);
-            std::cout << "index created" << std::endl;
+//            std::cout << "index created" << std::endl;
         }
 
         Index::Index(const char *indexName):
@@ -177,7 +177,7 @@ namespace sqleast {
             if(v.pageNum >= 0)
                 return v;
             int posi = v.slotNum;
-            std::cout << posi << std::endl;
+//            std::cout << posi << std::endl;
             Node leaf;
             getNode(hot_, leaf);
             leaf.insertN(value, posi);
@@ -190,18 +190,28 @@ namespace sqleast {
         }
 
         bool Index::removeEntry(int key) {
+            std::cout << "a" << key << std::endl;
             RID v = searchEntry(key);
+            std::cout << "b" << key << std::endl;
             if(v.pageNum < 0)
                 return false;
             Node leaf;
             getNode(hot_, leaf);
+            std::cout << "c" << key << std::endl;
             int rank = leaf.getPosition(key);
+            std::cout << "d" << key << std::endl;
             leaf.removeK(rank);
+            std::cout << "e" << key << std::endl;
             leaf.removeN(rank);
+            std::cout << "f" << key << std::endl;
             commitNode(hot_, leaf);
+            std::cout << "g" << key << std::endl;
             decIndexSize();
+            std::cout << "h" << key << std::endl;
             solveUnderFlow(hot_);
+            std::cout << "i" << key << std::endl;
             forcePages();
+            std::cout << "j" << key << std::endl;
             return true;
         }
 
@@ -368,7 +378,7 @@ namespace sqleast {
                     p.removeN(r+1);
                     p.removeK(r);
                     //TODO: release will produce error
-                    //releaseNode(p.n[r+1]);
+                    releaseNode(p.n[r+1]);
                     commitNode(rid, v);
                     commitNode(pid, p);
                 }

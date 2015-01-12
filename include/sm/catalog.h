@@ -25,6 +25,7 @@ namespace sqleast {
             int bitmapSize;
             int attrCount;
             int indexCount;
+            char primaryKey[MAX_NAME_LENGTH + 1];
         };
 
     }

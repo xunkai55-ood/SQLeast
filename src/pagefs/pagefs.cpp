@@ -182,10 +182,13 @@ namespace pagefs {
 //        Debug::info("found unpined");
         if (p == nullptr)
             return false;
+        char *data = p->item->data.data;
         LRUHashItem *t = lruList_.remove(p);
         int key = (int)(t - lruTable_.table);
         debug_ << "[RELEASE]" << t->data.fileId << " " << t->data.pageNum << std::endl;
-        return writeBack(lruTable_.popByKey(key).data);
+        bool res = writeBack(lruTable_.popByKey(key).data);
+        delete[] data;
+        return res;
     }
 
     void PageFS::commitAll(int fid) {
@@ -193,10 +196,12 @@ namespace pagefs {
         while (p != nullptr) {
             q = p->next;
             if (fid < 0 || p->item->data.fileId == fid) {
+                char *data = p->item->data.data;
                 LRUHashItem *t = lruList_.remove(p);
                 int key = (int)(t - lruTable_.table);
                 debug_ << "[RELEASE(ALL)]" << t->data.fileId << " " << t->data.pageNum << std::endl;
                 writeBack(lruTable_.popByKey(key).data);
+                delete[] data;
             }
             p = q;
         }

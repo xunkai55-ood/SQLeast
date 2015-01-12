@@ -4,6 +4,7 @@
 #include "sqleast.h"
 #include "sm/catalog.h"
 #include <sys/stat.h>
+#include <sstream>
 
 #define REL_CATALOG "rel.catalog"
 #define ATTR_CATALOG "attr.catalog"
@@ -27,8 +28,12 @@ namespace sqleast {
                 return std::string(c) + ".db";
             }
 
-            inline static std::string appendIndexExt(const char *c) {
-                return std::string(c) + ".index";
+            inline static std::string appendIndexExt(const char *c, int no) {
+                std::stringstream s;
+                s << c << "_" << no << ".index";
+                std::string res;
+                s >> res;
+                return res;
             }
 
             static void createDB(char const *dbName);

@@ -19,6 +19,7 @@ namespace sqleast {
             std::cout << "[TARGET-DB]" << name << std::endl;
             if (isDirectory(name)) {
                 throw DBExistsException();
+                return;
             }
             mkdir(name, 0777);
             chdir(dbName);
@@ -40,6 +41,7 @@ namespace sqleast {
             std::cout << "[TARGET-DB]" << name << std::endl;
             if (!isDirectory(name)) {
                 throw DBNotExistsException();
+                return;
             }
             chdir(dbName);
             working_ = 1;
@@ -48,6 +50,7 @@ namespace sqleast {
         void SystemManager::closeDB() {
             if (!working_) return;
             chdir("..");
+            working_ = 0;
         }
 
         void SystemManager::destroyDB(char const *dbName) {
@@ -61,6 +64,7 @@ namespace sqleast {
             std::cout << "[TARGET-DB]" << name << std::endl;
             if (!isDirectory(name)) {
                 throw DBNotExistsException();
+                return;
             }
             boost::filesystem::remove_all(boost::filesystem::path(dbName));
         }

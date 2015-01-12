@@ -13,7 +13,7 @@ namespace pagefs {
 
     // pagefs
     const int MAX_FILE_NUM(32767);
-    const int PAGE_SIZE(256);
+    const int PAGE_SIZE(8192);
     const int MAX_BUFFER_SIZE(64); // has to be 2^n for the performance concern
     const int MAX_BUFFER_SIZE_M1 = MAX_BUFFER_SIZE - 1;
 

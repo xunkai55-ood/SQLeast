@@ -10,11 +10,11 @@ namespace sqleast {
         FileHandle::FileHandle(FileId fid) : fid_(fid), fs_(PageFS::getInstance()) {
             FileInfo *infoPtr = (FileInfo*)fs_.loadPage(fid, 0);
             info_ = *(infoPtr);
-            std::cout << "[CONSTRUCTION]FileHandle " << fid << std::endl;
+//            std::cout << "[CONSTRUCTION]FileHandle " << fid << std::endl;
         }
 
         FileHandle::~FileHandle() {
-            std::cout << "[DESTRUCTION]FileHandle " << fid_ << std::endl;
+//            std::cout << "[DESTRUCTION]FileHandle " << fid_ << std::endl;
             forcePages();
             fs_.closeFile(fid_);
         }
@@ -111,6 +111,7 @@ namespace sqleast {
             char *pData = fs_.loadPage(fid_, pNum);
             pData = moveToRec(pData);
             pData += rid.slotNum * info_.recordSize;
+            memset(pData, 0, info_.recordSize);
             *(int*)pData |= REC_ALIVE;
             commitPage(pNum);
             unpinPage(pNum);

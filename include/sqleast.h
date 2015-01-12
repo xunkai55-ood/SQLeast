@@ -11,10 +11,11 @@ namespace sqleast {
 
      */
 
+    const int MAX_COND_NUM = 6;
     const int MAX_NAME_LENGTH = 20;
     const int MAX_PATH_LENGTH = 200;
 
-    enum AttrType {INT, STRING};
+    enum AttrType {INT, STRING, FLOAT, NULLV};
 
     enum CompOp {NO_OP, EQ_OP, LT_OP, GT_OP, LE_OP, GE_OP, NE_OP, IS_NULL_OP, NOT_NULL_OP};
 
@@ -71,6 +72,10 @@ namespace sqleast {
         inline char *getData() {
             return rData + FLAG_SIZE;
         }
+
+        inline void clear() {
+            memset(rData, 0, size);
+        }
     };
 
     enum RecordFlags {
@@ -79,6 +84,10 @@ namespace sqleast {
 
     const int MAX_ATTR_NUM = 100;
 
+    enum AttrProp {
+        PRIMARY_KEY
+    };
+
     struct AttrInfo {
         char *attrName;
         AttrType attrType;
@@ -86,6 +95,65 @@ namespace sqleast {
         int nullable;
         bool isPrimary;
     };
+
+    struct RelAttr{
+        char     *relName;    // Relation name (may be NULL)
+        char     *attrName;   // Attribute name
+
+        // Print function
+//    friend std::ostream &operator<<(std::ostream &s, const RelAttr &ra);
+    };
+
+    struct Value{
+        AttrType type;         /* type of value               */
+        void     *data;        /* value                       */
+        /* print function              */
+//    friend std::ostream &operator<<(std::ostream &s, const Value &v);
+    };
+
+    struct Condition{
+        RelAttr  lhsAttr;    /* left-hand side attribute            */
+        CompOp   op;         /* comparison operator                 */
+        int      bRhsIsAttr; /* TRUE if the rhs is an attribute,    */
+        /* in which case rhsAttr below is valid;*/
+        /* otherwise, rhsValue below is valid.  */
+        RelAttr  rhsAttr;    /* right-hand side attribute            */
+        Value    rhsValue;   /* right-hand side value                */
+        /* print function                               */
+//    friend std::ostream &operator<<(std::ostream &s, const Condition &c);
+
+    };
+
+//std::ostream &operator<<(std::ostream &s, const CompOp &op);
+//std::ostream &operator<<(std::ostream &s, const AttrType &at);
+
+//
+// Parse function
+//
+
+    void sqleast_parse();
+
+//
+// Error printing function; calls component-specific functions
+//
+
+// bQueryPlans is allocated by parse.y.  When bQueryPlans is 1 then the
+// query plan chosen for the SFW query will be displayed.  When
+// bQueryPlans is 0 then no query plan is shown.
+    extern int bQueryPlans;
+
+    /* utils */
+    inline int lower_equal(const char *a, const char *b) {
+        char t;
+        while (*a && *b) {
+            t = *a;
+            if (*a < 'a') t += 'z' - 'Z';
+            if (t != *b) return 0;
+            a++;
+            b++;
+        }
+        return (!*a && !*b);
+    }
 
 }
 

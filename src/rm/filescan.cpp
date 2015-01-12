@@ -36,7 +36,7 @@ namespace sqleast {
                         if (((*(c_.getData() + nullBitOffset_)) & nullBitMask_) == 0)
                             break;
                     } else if (attrType_ == INT) {
-                        int attr = *(c_.getData() + attrOffset_);
+                        int attr = *(int*)(c_.getData() + attrOffset_);
                         int flag = 0;
                         // NO_OP, EQ_OP, LT_OP, GT_OP, LE_OP, GE_OP, NE_OP, IS_NULL_OP, NOT_NULL_OP
                         switch (compOp_) {

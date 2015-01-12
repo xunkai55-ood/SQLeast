@@ -6,4 +6,5 @@ add_subdirectory(ix)
 add_subdirectory(sm)
 add_subdirectory(ql)
 add_subdirectory(cli)
+add_subdirectory(frontend)
 
