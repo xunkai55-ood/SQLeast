@@ -30,6 +30,7 @@ namespace sqleast {
                     if (compOp_ == NO_OP) {
                         break;
                     } else if (compOp_ == IS_NULL_OP) {
+//                        std::cout << (int)*(unsigned char*)(c_.getData() + nullBitOffset_);
                         if ((*(c_.getData() + nullBitOffset_)) & nullBitMask_)
                             break;
                     } else if (compOp_ == NOT_NULL_OP) {

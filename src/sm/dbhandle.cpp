@@ -10,6 +10,7 @@ extern Printer err;
 
 #include <vector>
 #include <ix/index.h>
+#include <assert.h>
 
 using namespace std;
 
@@ -61,10 +62,10 @@ namespace sqleast {
                     dataAttrInfo.attrLength = sizeof(double);
                 dataAttrInfo.attrType = (*attrs).attrType;
                 dataAttrInfo.nullable = (*attrs).nullable;
-                dataAttrInfo.nullBitOffset = (i >> 3) + tupleLength;
+                dataAttrInfo.nullBitOffset = (i / 8) + tupleLength;
                 dataAttrInfo.nullBitMask = (1 << (i & 7));
-                if (primary != nullptr) {
-                    dataAttrInfo.isPrimary = (strcmp((*attrs).attrName, primary) == 0);
+                if (primary != nullptr && strcmp((*attrs).attrName, primary) == 0) {
+                    dataAttrInfo.isPrimary = 1;
                     dataAttrInfo.indexNo = 0;
                     ix::Index::createIndex(SystemManager::appendIndexExt(relName, 0).c_str());
                 } else {
@@ -76,9 +77,10 @@ namespace sqleast {
                 memcpy(r2.getData(), &dataAttrInfo, sizeof(DataAttrInfo));
                 attrCatalog_.insertRec(r2);
 
-                offset += (*attrs).attrLength;
+                offset += dataAttrInfo.attrLength;
             }
             RelInfo relInfo;
+            assert(offset == tupleLength);
             memset(&relInfo, 0, sizeof(relInfo));
             strncpy(relInfo.relName, relName, MAX_NAME_LENGTH);
             relInfo.tupleLength = offset;

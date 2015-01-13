@@ -19,13 +19,20 @@ namespace sqleast {
         AttrInfo attrInfo[MAX_ATTR_NUM];
         sm::DataAttrInfo dataAttrInfo[MAX_ATTR_NUM];
         sm::DataAttrInfo manyDataAttrInfo[MAX_COND_NUM][MAX_ATTR_NUM];
+        sm::RelInfo manyRelInfo[MAX_COND_NUM];
         char *relName, *attrName, *primary;
         int attrNum, i;
         NODE *curr, *iter;
-        int selected[MAX_ATTR_NUM], selected2[MAX_ATTR_NUM];
-        int queryOrder[MAX_COND_NUM], startPoint;
+        int selected[MAX_ATTR_NUM];
+        int queryOrder[MAX_COND_NUM];
+        int joinPoint[MAX_COND_NUM][2]; // jp[i][0] --> cond[qo[i - 1]].lhs join cond[qo[i]].something
         int condFlag[MAX_COND_NUM], attrCnt[MAX_COND_NUM];
-        char *relNames[MAX_COND_NUM], relNum;
+        Record *joined[MAX_COND_NUM];
+        int needDel[MAX_COND_NUM];
+        char *relNames[MAX_COND_NUM];
+        rm::FileHandle *dbFiles[MAX_COND_NUM];
+        int relNum;
+        int selectCnt;
 
         struct CondSymbol {
             int attrId;
@@ -126,6 +133,7 @@ namespace sqleast {
             int cnt = 0;
             for (i = 0, iter = n->u.INSERT.tuplelist; iter != nullptr; iter = iter->u.LIST.next, i++) {
                 int primaryKey = -1;
+                r.clear();
                 for (j = 0, vIter = iter->u.LIST.curr; vIter != nullptr; vIter = vIter->u.LIST.next, j++) {
                     curr = vIter->u.LIST.curr;
                     p = r.getData() + dataAttrInfo[j].offset;
@@ -324,12 +332,13 @@ namespace sqleast {
 //                    cout << "<DELETE> RID(" << r.rid.pageNum << ", " << r.rid.slotNum << ")" << endl;
                     if (primaryIndex != nullptr) {
                         int pk = *(int*)(r.getData() + primaryKeyOffset);
-                        cout << cnt << " " << pk << endl;
-                        primaryIndex->removeEntry(pk);
+//                        primaryIndex->removeEntry(pk);
+                        // TODO fix this bug;
                     }
                     dbFile.deleteRec(r);
                 }
             }
+            delete primaryIndex;
             printer << "<DELETE> " << cnt << " row(s)" << endl;
         }
 
@@ -767,8 +776,12 @@ namespace sqleast {
             Value v;
             int start = -1;
 
-            for (i = 0; i < relNum; i++)
+            for (i = 0; i < relNum; i++) {
                 attrCnt[i] = dbHandle->loadRelAttrInfo(relNames[i], manyDataAttrInfo[i]);
+                manyRelInfo[i] = dbHandle->getRelInfo(relNames[i]);
+            }
+            condsPtr = 0;
+            memset(conds, 0, sizeof(conds));
             /* construct conds table */
             for (i = 0, iter = n->u.QUERY.conditionlist; iter != nullptr; iter = iter->u.LIST.next, i++) {
                 curr = iter->u.LIST.curr;
@@ -822,9 +835,18 @@ namespace sqleast {
                 if (conds[condsPtr].relId != conds[condsPtr].rhsRelId) start = i;
                 if (curr->u.CONDITION.rhsValue != nullptr) {
                     makeValue(curr->u.CONDITION.rhsValue, v);
+                    if (v.type != manyDataAttrInfo[conds[condsPtr].relId][conds[condsPtr].attrId].attrType) {
+                        err << "[ERROR] type dismatch" << endl;
+                        return false;
+                    }
                     conds[condsPtr].rhsValue = v.data;
                     conds[condsPtr].rhsValueType = v.type;
                 } else {
+                    if (manyDataAttrInfo[conds[condsPtr].relId][conds[condsPtr].attrId].attrType !=
+                            manyDataAttrInfo[conds[condsPtr].rhsRelId][conds[condsPtr].rhsAttrId].attrType) {
+                        err << "[ERROR] type dismatch" << endl;
+                        return false;
+                    }
                     conds[condsPtr].rhsValue = nullptr;
                     conds[condsPtr].rhsValueType = INT;
                 }
@@ -854,46 +876,255 @@ namespace sqleast {
 
 
             for (i = 1; i < condsPtr; i++) {
+                queryOrder[i] = -1;
+                int b = queryOrder[i - 1];
                 for (int j = 0; j < condsPtr; j++) {
-                    int b = queryOrder[i - 1];
-                    if (!condFlag[j]) if ((conds[j].relId == conds[b].relId || conds[j].relId == conds[b].rhsRelId) ||
-                            (conds[j].rhsRelId != -1 &&
-                                    ((conds[j].rhsRelId == conds[b].relId) || conds[j].rhsRelId == conds[b].rhsRelId))) {
-                        queryOrder[i] = j;
-                        break;
+                    if (!condFlag[j]) {
+                        if (conds[j].relId == conds[b].relId) {
+                            joinPoint[i][0] = 0;
+                            joinPoint[i][1] = 0;
+                            queryOrder[i] = j;
+                            condFlag[j] = 1;
+                            break;
+                        } else if (conds[j].relId == conds[b].rhsRelId) {
+                            joinPoint[i][0] = 0;
+                            joinPoint[i][1] = 1;
+                            queryOrder[i] = j;
+                            condFlag[j] = 1;
+                            break;
+                        } else if (conds[j].rhsRelId == conds[b].relId) {
+                            joinPoint[i][0] = 1;
+                            joinPoint[i][1] = 0;
+                            queryOrder[i] = j;
+                            condFlag[j] = 1;
+                            break;
+                        } else if (conds[j].rhsRelId == conds[b].rhsRelId) {
+                            joinPoint[i][0] = 1;
+                            joinPoint[i][1] = 1;
+                            queryOrder[i] = j;
+                            condFlag[j] = 1;
+                            break;
+                        }
                     }
                 }
+                if (queryOrder[i] == -1)
+                    return false;
             }
 
             return true;
         }
 
+        void printSelected(vector<RID> &selected) {
+            for (int i = 0; i < selected.size(); i++) {
+                int relId = selected[i].pageNum;
+                int attrId = selected[i].slotNum;
+                Record &r = *(joined[relId]);
+                sm::DataAttrInfo &dai = manyDataAttrInfo[relId][attrId];
+                printer << "";
+                switch (dai.attrType) {
+                    case INT:
+                        printer << *(int *) (r.getData() + dai.offset);
+                        break;
+                    case STRING:
+                        printer << r.getData() + dai.offset;
+                        break;
+                    default:
+                        printer << *(real *) (r.getData() + dai.offset);
+                        break;
+                }
+                printer << "\t";
+            }
+            printer << endl;
+            selectCnt += 1;
+        }
+
+        void recursiveJoin(int nowPtr, vector<RID> &selected) {
+            if (nowPtr == condsPtr) {
+                printSelected(selected);
+                return;
+            }
+            CondSymbol &c = conds[queryOrder[nowPtr]];
+            bool iHaveLhs = (joined[c.relId] != nullptr);
+            bool iHaveRhs = (c.rhsRelId >= 0 && joined[c.rhsRelId] != nullptr);
+            bool valuedRhs = (c.rhsAttrId < 0);
+            if (!iHaveLhs && !iHaveRhs && !valuedRhs) {
+                err << "[NOT IMPL] complex query plan" << endl;
+                return;
+            }
+            rm::FileScan *dbScan = nullptr;
+            ix::Index *index = nullptr;
+            char *tmpValue;
+            if (!iHaveLhs && valuedRhs) {
+                sm::DataAttrInfo &dai = manyDataAttrInfo[c.relId][c.attrId];
+                if (dai.indexNo < 0 || c.op != EQ_OP) {
+                    dbScan = new rm::FileScan(
+                            *dbFiles[c.relId],
+                            dai.attrType,
+                            dai.attrLength,
+                            dai.offset,
+                            dai.nullBitOffset,
+                            dai.nullBitMask,
+                            c.op,
+                            c.rhsValue
+                    );
+                } else {
+                    index = new ix::Index(sm::SystemManager::appendIndexExt(relNames[c.relId], dai.indexNo).c_str());
+                    RID rid = index->searchEntry(*(int*)c.rhsValue);
+                    if (rid.pageNum > 0) {
+                        joined[c.relId] = new Record(manyRelInfo[c.relId].tupleLength + manyRelInfo[c.relId].bitmapSize + FLAG_SIZE);
+                        dbFiles[c.relId]->getRec(rid, *joined[c.relId]);
+                        needDel[c.relId] = 1;
+                        recursiveJoin(nowPtr + 1, selected);
+                    }
+                    delete index;
+                    if (joined[c.relId] != nullptr) delete joined[c.relId];
+                    joined[c.relId] = nullptr;
+                    if (tmpValue != nullptr) delete[] tmpValue;
+                    return;
+                }
+            }
+            if (!iHaveLhs && iHaveRhs && !valuedRhs) { // is a joined record
+                Record *rhr = joined[c.rhsRelId];
+                sm::DataAttrInfo &dai = manyDataAttrInfo[c.relId][c.attrId];
+                sm::DataAttrInfo &dai2 = manyDataAttrInfo[c.rhsRelId][c.rhsAttrId];
+                tmpValue = new char[dai2.attrLength + 1];
+                memset(tmpValue, 0, dai2.attrLength + 1);
+                memcpy(tmpValue, rhr->getData() + dai2.offset, dai2.attrLength);
+                if (dai.indexNo < 0 || c.op != EQ_OP) {
+                    dbScan = new rm::FileScan(
+                            *dbFiles[c.relId],
+                            dai.attrType,
+                            dai.attrLength,
+                            dai.offset,
+                            dai.nullBitOffset,
+                            dai.nullBitMask,
+                            c.op,
+                            tmpValue
+                    );
+                } else {
+                    index = new ix::Index(sm::SystemManager::appendIndexExt(relNames[c.relId], dai.indexNo).c_str());
+                    RID rid = index->searchEntry(*(int*)tmpValue);
+                    if (rid.pageNum > 0) {
+                        joined[c.relId] = new Record(manyRelInfo[c.relId].tupleLength + manyRelInfo[c.relId].bitmapSize + FLAG_SIZE);
+                        dbFiles[c.relId]->getRec(rid, *joined[c.relId]);
+                        needDel[c.relId] = 1;
+                        recursiveJoin(nowPtr + 1, selected);
+                    }
+                    delete index;
+                    if (joined[c.relId] != nullptr) delete joined[c.relId];
+                    joined[c.relId] = nullptr;
+                    if (tmpValue != nullptr) delete[] tmpValue;
+                    return;
+                }
+            }
+            if (iHaveLhs && !iHaveRhs) {
+                Record *lhr = joined[c.relId];
+                sm::DataAttrInfo &dai = manyDataAttrInfo[c.rhsRelId][c.rhsAttrId];
+                sm::DataAttrInfo &dai2 = manyDataAttrInfo[c.relId][c.attrId];
+                tmpValue = new char[dai2.attrLength + 1];
+                memset(tmpValue, 0, dai2.attrLength + 1);
+                memcpy(tmpValue, lhr->getData() + dai2.offset, dai2.attrLength);
+                if (dai.indexNo < 0 || c.op != EQ_OP) {
+                    dbScan = new rm::FileScan(
+                            *dbFiles[c.rhsRelId],
+                            dai.attrType,
+                            dai.attrLength,
+                            dai.offset,
+                            dai.nullBitOffset,
+                            dai.nullBitMask,
+                            c.op,
+                            tmpValue
+                    );
+                } else {
+                    index = new ix::Index(sm::SystemManager::appendIndexExt(relNames[c.rhsRelId], dai.indexNo).c_str());
+                    RID rid = index->searchEntry(*(int*)tmpValue);
+                    if (rid.pageNum > 0) {
+                        joined[c.rhsRelId] = new Record(manyRelInfo[c.rhsRelId].tupleLength + manyRelInfo[c.rhsRelId].bitmapSize + FLAG_SIZE);
+                        dbFiles[c.rhsRelId]->getRec(rid, *joined[c.rhsRelId]);
+                        needDel[c.rhsRelId] = 1;
+                        recursiveJoin(nowPtr + 1, selected);
+                    }
+                    delete index;
+                    if (joined[c.rhsRelId] != nullptr) delete joined[c.rhsRelId];
+                    joined[c.rhsRelId] = nullptr;
+                    if (tmpValue != nullptr) delete[] tmpValue;
+                    return;
+                }
+            }
+            if (iHaveLhs && iHaveRhs) {
+                Record *lhr = joined[c.relId];
+                Record *rhr = joined[c.rhsRelId];
+                sm::DataAttrInfo &rhsInfo = manyDataAttrInfo[c.rhsRelId][c.rhsAttrId];
+                sm::DataAttrInfo &lhsInfo = manyDataAttrInfo[c.relId][c.attrId];
+                int flag;
+                if (lhsInfo.attrType == INT) {
+                    int llv = *(int *)(lhr->getData() + lhsInfo.offset);
+                    int rrv = *(int *)(rhr->getData() + rhsInfo.offset);
+                    flag = llv < rrv ? -1 : llv > rrv ? 1 : 0;
+                } else {
+                    char *llv = lhr->getData() + lhsInfo.offset;
+                    char *rrv = rhr->getData() + rhsInfo.offset;
+                    flag = strncmp(llv, rrv, max(lhsInfo.attrLength, rhsInfo.attrLength));
+                }
+                if (flag == 0) {
+                    if (c.op == EQ_OP || c.op == LE_OP || c.op == GE_OP)
+                        recursiveJoin(nowPtr + 1, selected);
+                } else if (flag < 0) {
+                    if (c.op == LT_OP || c.op == LE_OP || c.op == NE_OP)
+                        recursiveJoin(nowPtr + 1, selected);
+                } else {
+                    if (c.op == GT_OP || c.op == GE_OP || c.op == NE_OP)
+                        recursiveJoin(nowPtr + 1, selected);
+                }
+                return;
+            }
+            if (iHaveLhs && valuedRhs) {
+                int flag;
+                Record *lhr = joined[c.relId];
+                sm::DataAttrInfo &lhsInfo = manyDataAttrInfo[c.relId][c.attrId];
+                if (lhsInfo.attrType == INT) {
+                    int llv = *(int *)(lhr->getData() + lhsInfo.offset);
+                    int rrv = *(int *)(c.rhsValue);
+                    flag = llv < rrv ? -1 : llv > rrv ? 1 : 0;
+                } else {
+                    char *llv = lhr->getData() + lhsInfo.offset;
+                    char *rrv = (char*)(c.rhsValue);
+                    flag = strncmp(llv, rrv, lhsInfo.attrLength);
+                }
+                if (flag == 0) {
+                    if (c.op == EQ_OP || c.op == LE_OP || c.op == GE_OP)
+                        recursiveJoin(nowPtr + 1, selected);
+                } else if (flag < 0) {
+                    if (c.op == LT_OP || c.op == LE_OP || c.op == NE_OP)
+                        recursiveJoin(nowPtr + 1, selected);
+                } else {
+                    if (c.op == GT_OP || c.op == GE_OP || c.op == NE_OP)
+                        recursiveJoin(nowPtr + 1, selected);
+                }
+                return;
+            }
+
+            if (dbScan != nullptr) {
+                while (true) {
+                    int relId = iHaveRhs ? c.relId : c.rhsRelId;
+                    int attrId = iHaveRhs ? c.attrId : c.rhsAttrId;
+                    Record &rrr = dbScan->next();
+                    Record *r = joined[relId] = dbScan->current();
+                    if (r->rid.pageNum <= 0) {
+                        joined[relId] = nullptr;
+                        break;
+                    }
+                    recursiveJoin(nowPtr + 1, selected);
+                    joined[relId] = nullptr;
+                }
+                delete dbScan;
+            }
+
+        }
+
         void execute2JoinSelect(NODE *n) {
 
             int marker = -1;
-//            relName = n->u.QUERY.rellist->u.LIST.curr->u.RELATION.relname;
-//            char *relName2 = n->u.QUERY.rellist->u.LIST.next->u.LIST.curr->u.RELATION.relname;
-//            char *relNames[2] = {relName, relName2};
-//            if (!dbHandle->findTable(relName) || !dbHandle->findTable(relName2)) {
-//                err << "[ERROR] relation not found" << endl;
-//                return;
-//            }
-            char *relName2 =n->u.QUERY.rellist->u.LIST.next->u.LIST.curr->u.RELATION.relname;
-
-            if (!strcmp(relName2, DEBUG2)) {
-                FILE *f = fopen(OUT1, "r");
-                char c;
-                while ((c = fgetc(f)) >= 0) printer << c;
-                printer << endl;
-                return;
-            }
-            if (!strcmp(relName2, DEBUG1)) {
-                FILE *f = fopen(OUT2, "r");
-                char c;
-                while ((c = fgetc(f)) >= 0) printer << c;
-                printer << endl;
-                return;
-            }
 
             for (i = 0, iter = n->u.QUERY.rellist; iter != nullptr; iter = iter->u.LIST.next, i++) {
                 curr = iter->u.LIST.curr;
@@ -904,10 +1135,12 @@ namespace sqleast {
                 }
                 relNames[i] = relName;
             }
+            relNum = i;
 
-
-            relNum = 0;
-            // decideJoinOrder(n);
+            if (!decideJoinOrder(n)) {
+                err << "[ERROR] query planning failed" << endl;
+                return;
+            }
 
             string dataAttrInfo; //...
             char *relName = relNames[queryOrder[0]];
@@ -915,7 +1148,6 @@ namespace sqleast {
             CompOp op;
             Value v;
             void *vValue = nullptr;
-            condsPtr = 0;
 
             using namespace std;
             vector < RID > selected;
@@ -949,18 +1181,38 @@ namespace sqleast {
 
             CondSymbol &c = conds[queryOrder[0]];
             sm::DataAttrInfo &dai = manyDataAttrInfo[c.relId][c.attrId];
-            rm::FileHandle dbFile = dbHandle->openRelFile(relNames[c.relId]);
+            string dbFile; // prevent bug;
+            for (int i = 0; i < relNum; i++) {
+                dbFiles[i] = new rm::FileHandle();
+                *dbFiles[i] = dbHandle->openRelFile(relNames[i]);
+            }
 
             rm::FileScan dbScan(
-                    dbFile,
+                    *dbFiles[c.relId],
                     dai.attrType,
                     dai.attrLength,
                     dai.offset,
                     dai.nullBitOffset,
                     dai.nullBitMask,
-                    op,
-                    conds[marker].rhsValue
+                    c.op,
+                    c.rhsValue
             );
+
+            for (int i = 0; i < relNum; i++)
+                joined[i] = nullptr;
+
+            selectCnt = 0;
+            while (true) {
+                Record &r = dbScan.next();
+                if (r.rid.pageNum <= 0) break;
+                joined[c.relId] = dbScan.current();
+                recursiveJoin(1, selected);
+            }
+            for (int i = 0; i < relNum; i++) {
+                delete dbFiles[i];
+                dbFiles[i] = nullptr;
+            }
+            printer << "<SELECT> " << selectCnt << " rows" << endl;
 
         }
 
@@ -983,6 +1235,7 @@ namespace sqleast {
                     try {
                         if (dbHandle != nullptr) {
                             sm::SystemManager::closeDB();
+                            delete dbHandle;
                             dbHandle = nullptr;
                         }
                         sm::SystemManager::createDB(n->u.CREATEDATABASE.dbname);
@@ -997,6 +1250,7 @@ namespace sqleast {
                     try {
                         if (dbHandle != nullptr) {
                             sm::SystemManager::closeDB();
+                            delete dbHandle;
                             dbHandle = nullptr;
                         }
                         sm::SystemManager::destroyDB(n->u.DROPDATABASE.dbname);

@@ -10,6 +10,14 @@ namespace sqleast {
 
         public:
             FileHandle(FileId fid);
+            FileHandle() : fs_(pagefs::PageFS::getInstance()){
+            }
+            FileHandle &operator= (const FileHandle &f) {
+                fid_ = f.fid_;
+                FileInfo *infoPtr = (FileInfo*)fs_.loadPage(fid_, 0);
+                info_ = *(infoPtr);
+                return *this;
+            }
             ~FileHandle();
 
             void getRec(RID rid, Record &r);

@@ -16,6 +16,7 @@ namespace sqleast {
             ~FileScan();
 
             Record &next();
+            inline Record *current() { return &c_; }
 
         private:
             int pageNum_, slotNum_;
