@@ -1,6 +1,6 @@
-#line 2 "/Users/badpoet/Thursday/3a/DB/projects/SQLeast/src/frontend/lexer.cpp"
+#line 2 "/Users/badpoet/Workspace/Repositories/SQLeast/src/frontend/lexer.cpp"
 
-#line 4 "/Users/badpoet/Thursday/3a/DB/projects/SQLeast/src/frontend/lexer.cpp"
+#line 4 "/Users/badpoet/Workspace/Repositories/SQLeast/src/frontend/lexer.cpp"
 
 #define  YY_INT_ALIGNED short int
 
@@ -496,7 +496,7 @@ static char *get_qstring(char *qstring, int len);
 
 
 
-#line 500 "/Users/badpoet/Thursday/3a/DB/projects/SQLeast/src/frontend/lexer.cpp"
+#line 500 "/Users/badpoet/Workspace/Repositories/SQLeast/src/frontend/lexer.cpp"
 
 #define INITIAL 0
 #define comment 1
@@ -682,7 +682,7 @@ YY_DECL
     
 #line 28 "lexer.l"
 
-#line 686 "/Users/badpoet/Thursday/3a/DB/projects/SQLeast/src/frontend/lexer.cpp"
+#line 686 "/Users/badpoet/Workspace/Repositories/SQLeast/src/frontend/lexer.cpp"
 
 	if ( !(yy_init) )
 		{
@@ -899,7 +899,7 @@ YY_RULE_SETUP
 #line 57 "lexer.l"
 ECHO;
 	YY_BREAK
-#line 903 "/Users/badpoet/Thursday/3a/DB/projects/SQLeast/src/frontend/lexer.cpp"
+#line 903 "/Users/badpoet/Workspace/Repositories/SQLeast/src/frontend/lexer.cpp"
 
 	case YY_END_OF_BUFFER:
 		{

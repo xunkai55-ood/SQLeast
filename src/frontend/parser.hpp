@@ -157,7 +157,7 @@ typedef union YYSTYPE
     NODE *n;
 }
 /* Line 1529 of yacc.c.  */
-#line 161 "/Users/badpoet/Thursday/3a/DB/projects/SQLeast/src/frontend/parser.hpp"
+#line 161 "/Users/badpoet/Workspace/Repositories/SQLeast/src/frontend/parser.hpp"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

@@ -1,5 +1,5 @@
 #include "sm/systemmanager.h"
-#include "dbhandle.h"
+#include "sm/dbhandle.h"
 
 int main() {
     sqleast::sm::SystemManager::destroyDB("testing");

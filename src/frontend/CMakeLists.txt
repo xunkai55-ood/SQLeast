@@ -13,3 +13,4 @@ add_library(sqleast-frontend STATIC
    ${BISON_MyParser_OUTPUTS}
    ${FLEX_MyScanner_OUTPUTS}
 )
+target_link_libraries(sqleast-frontend sqleast-ql)

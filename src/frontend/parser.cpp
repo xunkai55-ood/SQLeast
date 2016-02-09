@@ -252,7 +252,7 @@ typedef union YYSTYPE
     NODE *n;
 }
 /* Line 193 of yacc.c.  */
-#line 256 "/Users/badpoet/Thursday/3a/DB/projects/SQLeast/src/frontend/parser.cpp"
+#line 256 "/Users/badpoet/Workspace/Repositories/SQLeast/src/frontend/parser.cpp"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
@@ -265,7 +265,7 @@ typedef union YYSTYPE
 
 
 /* Line 216 of yacc.c.  */
-#line 269 "/Users/badpoet/Thursday/3a/DB/projects/SQLeast/src/frontend/parser.cpp"
+#line 269 "/Users/badpoet/Workspace/Repositories/SQLeast/src/frontend/parser.cpp"
 
 #ifdef short
 # undef short
@@ -2060,7 +2060,7 @@ yyreduce:
 
 
 /* Line 1267 of yacc.c.  */
-#line 2064 "/Users/badpoet/Thursday/3a/DB/projects/SQLeast/src/frontend/parser.cpp"
+#line 2064 "/Users/badpoet/Workspace/Repositories/SQLeast/src/frontend/parser.cpp"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
